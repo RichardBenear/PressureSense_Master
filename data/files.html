@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PressureSense — File Management</title>
+  <meta content="noindex, nofollow" name="robots" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600&family=Barlow+Condensed:wght@500;700&display=swap" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="ag-page">
+
+  <div class="ag-root">
+
+    <header class="ag-header">
+      <div class="ag-logo">
+        <svg class="ag-logo-mark" width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="gf" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stop-color="#1e2f50"/>
+              <stop offset="100%" stop-color="#080f1f"/>
+            </radialGradient>
+          </defs>
+          <circle cx="22" cy="22" r="21" fill="url(#gf)" stroke="#1a5fcc" stroke-width="1.5"/>
+          <path d="M 6.4 31 A 18 18 0 1 1 37.6 31" fill="none" stroke="#1a2a44" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M 6.4 31 A 18 18 0 0 1 25 4" fill="none" stroke="#0d6efd" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="6.4" y1="31" x2="9" y2="29.5" stroke="#4466aa" stroke-width="1"/>
+          <line x1="6.4" y1="13" x2="9" y2="14.5" stroke="#4466aa" stroke-width="1"/>
+          <line x1="22" y1="4" x2="22" y2="7" stroke="#4466aa" stroke-width="1"/>
+          <line x1="37.6" y1="13" x2="35" y2="14.5" stroke="#4466aa" stroke-width="1"/>
+          <line x1="37.6" y1="31" x2="35" y2="29.5" stroke="#4466aa" stroke-width="1"/>
+          <line x1="22" y1="22" x2="24" y2="9" stroke="#ff4433" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="22" y1="22" x2="21" y2="26" stroke="#cc2211" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="22" cy="22" r="2.5" fill="#ccddff" stroke="#fff" stroke-width="0.5"/>
+          <text x="22" y="37" text-anchor="middle" font-size="5" fill="#6688bb" font-family="sans-serif" font-weight="bold" letter-spacing="0.8">PSI</text>
+        </svg>
+        <div>
+          <div class="ag-brand">PRESSURE<span>SENSE</span></div>
+          <!--<div class="ag-version">FIRMWARE v2.4.1 — ESP32C6</div>-->
+        </div>
+      </div>
+      <nav class="ag-nav">
+        <a href="index.html">CHART</a>
+        <a href="config.html">CONFIG</a>
+        <a href="calibration.html">CALIB</a>
+        <a href="map.html">MAP</a>
+        <a href="files.html" class="active">FILES</a>
+      </nav>
+    </header>
+
+    <div class="ag-status-bar">
+      <div class="ag-status-dot"></div>
+      <div class="ag-status-item">SYSTEM <span class="val" id="system-status">ONLINE</span></div>
+      <span class="ag-status-sep">|</span>
+      <div class="ag-status-item">SPIFFS FREE <span class="val" id="spiffs-free">—</span></div>
+      <span class="ag-status-sep">|</span>
+      <div class="ag-status-item">SD FREE <span class="val" id="sd-free">—</span></div>
+      <span class="ag-status-sep">|</span>
+      <div class="ag-status-item">UPTIME <span class="val" id="uptime-display">—</span></div>
+    </div>
+
+    <div class="ag-body">
+
+      <div id="toast" class="ag-toast hidden">
+        <span class="ag-toast-icon">&#10003;</span>
+        <span id="toast-msg">Action completed.</span>
+      </div>
+
+      <div class="ag-two-col">
+
+        <!-- SPIFFS Files -->
+        <div class="ag-section">
+          <div class="ag-section-header">
+            <div class="ag-section-title">&#128190; SPIFFS Files</div>
+            <button class="ag-btn ag-btn-ghost ag-btn-sm" id="refresh-spiffs">&#8635; Refresh</button>
+          </div>
+          <div class="ag-section-body">
+            <div class="ag-file-list" id="spiffsFileList">
+              <div class="ag-file-empty">Loading...</div>
+            </div>
+            <div class="ag-field-row" style="margin-top:12px;">
+              <select id="deleteSPIFFSFileSelector" class="ag-select" style="flex:1;"></select>
+              <button class="ag-btn ag-btn-danger ag-btn-sm" id="deleteSPIFFSFileBtn">&#10005; Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SD Card Files -->
+        <div class="ag-section">
+          <div class="ag-section-header">
+            <div class="ag-section-title">&#128436; SD Card Files</div>
+            <button class="ag-btn ag-btn-ghost ag-btn-sm" id="refresh-sd">&#8635; Refresh</button>
+          </div>
+          <div class="ag-section-body">
+            <div class="ag-file-list" id="sdCardFileList">
+              <div class="ag-file-empty">Loading...</div>
+            </div>
+            <div class="ag-field-row" style="margin-top:12px;">
+              <select id="deleteSdFileSelector" class="ag-select" style="flex:1;"></select>
+              <button class="ag-btn ag-btn-danger ag-btn-sm" id="deleteSdFileBtn">&#10005; Delete</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- File Viewer -->
+      <div class="ag-section">
+        <div class="ag-section-header">
+          <div class="ag-section-title">&#128196; File Viewer</div>
+          <div class="ag-toolbar ag-toolbar-stack">
+            <div class="ag-toolbar-row">
+              <select id="spiffsJsonFileSelector" class="ag-select"></select>
+              <button class="ag-btn ag-btn-ghost ag-btn-sm" id="showSpiffsFileContentsBtn">View SPIFFS JSON</button>
+            </div>
+            <div class="ag-toolbar-row">
+              <select id="sdFileSelector" class="ag-select"></select>
+              <button class="ag-btn ag-btn-ghost ag-btn-sm" id="showSdFileContentsBtn">View SD File</button>
+            </div>
+          </div>
+        </div>
+        <div class="ag-section-body">
+          <pre class="ag-file-preview" id="fileContents">Select a file above to preview its contents.</pre>
+        </div>
+      </div>
+
+      <!-- System Controls -->
+      <div class="ag-section">
+        <div class="ag-section-header">
+          <div class="ag-section-title">&#9881; System Controls</div>
+        </div>
+        <div class="ag-section-body">
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button class="ag-btn ag-btn-danger" id="resetBtn">&#8634; Reset ESP32</button>
+            <span class="ag-help-text">Reboots the microcontroller. All unsaved settings will be lost.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <footer class="ag-footer">
+      <div class="ag-footer-right">
+        <span>SD CARD: <span id="footer-sd" style="color:#22c55e;">—</span></span>
+        <span>WIFI: <span id="footer-wifi" style="color:#22c55e;">—</span></span>
+        <span>UPTIME: <span id="footer-uptime" style="color:#5ba4d9;">—</span></span>
+        <span>REMOTE: <span id="footer-remote" style="color:#22c55e;">—</span></span>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="net-utils.js" defer></script>
+  <script src="files.js" defer></script>
+</body>
+</html>

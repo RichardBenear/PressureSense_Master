@@ -1,0 +1,38 @@
+==================================================================================================================================
+                                                   Zone Irrigation Calibration                                                    
+                               SVG: ..\images\sprinkler_mapVer8.svg   Scale: 24.01 x 26.03 ft/unit                                
+==================================================================================================================================
+Ctrl     Zone  Name               Area ft²   Acres    PSI   Flow GPM    mm/min  Head / Emitter          Layers
+----------------------------------------------------------------------------------------------------------------------------------
+Field       1  North Big Gun        14,263   0.327     36      40.25   0.11497  Big Gun x1              f_cov_1
+Field       2  Block Wall            9,704   0.223     32       4.22   0.01770  Rotor x1                f_cov_2
+Field       3  East Fence            7,100   0.163     49       5.22   0.02994  Rotor x1                f_cov_3
+Field       4  East Center          12,491   0.287     38       4.59   0.01499  Rotor x1                f_cov_4
+Field       5  East Daylillies       7,753   0.178     53       5.43   0.02851  Rotor x1                f_cov_5
+Field       6  Center               12,201   0.280     31       4.15   0.01386  Rotor x1                f_cov_6
+Field       7  North of Shed        14,887   0.342     37       4.53   0.01241  Rotor x1                f_cov_7
+Field       9  Vineyard+8           18,743   0.430     51      30.56   0.06643  Drip + Pop-up x5 †      f_cov_8, f_cov_9
+Field      10  South Big Gun        12,327   0.283     34      39.12   0.12928  Big Gun x1              f_cov_10
+Field      11  West Center          17,018   0.391     35       4.41   0.01056  Rotor x1                f_cov_11
+Field      12  North Fence          12,365   0.284     47       5.11   0.01684  Rotor x1                f_cov_12
+Yard        1  Garage                2,645   0.061     47       5.11   0.07871  Rotor x1                yd_cov_garage_south, yd_cov_garage_east
+Yard        2  South Yard            5,378   0.123     48       5.16   0.03912  Rotor x1                yd_cov_south, yd_cov_se
+Yard        3  North Yard            4,562   0.105     37       4.53   0.04049  Rotor x1                yd_cov_well, yd_cov_north
+Yard        4  West Yard             1,937   0.044     49       5.22   0.10974  Rotor x1                yd_cov_west
+Yard        5  Around Pool           3,599   0.083     43       2.39   0.02710  Pop-up x1               yd_cov_pool_east, yd_cov_pool_west
+Yard        7  West Fence            1,892   0.043     47       5.11   0.11004  Rotor x1                yd_cov_west_fence
+Yard        8  South Fence           1,603   0.037     37       2.22   0.05645  Pop-up x1               yd_cov_south_fence
+Yard       10  Block Wall            4,274   0.098     56       2.73   0.02605  Pop-up x1               yd_cov_blockwall
+Yard       11  East Yard             1,337   0.031     58       2.78   0.08475  Pop-up x1               yd_cov_patio
+----------------------------------------------------------------------------------------------------------------------------------
+  Field total:    138,852 ft²  (3.19 acres)
+  Yard total:     27,227 ft²  (0.63 acres)
+  Grand total:     166,079 ft²  (3.81 acres)
+==================================================================================================================================
+
+Notes:
+  Sprinkler flow: flow_gpm = rated_gpm * head_count * sqrt(actual_psi / rated_psi)
+  Drip flow (†):  total_gpm specified directly in ZONE_HEAD_ASSIGNMENTS
+                  Formula: (line_length_ft / emitter_spacing_ft) * num_lines * emitter_gph / 60
+  mm/min:         flow_gpm * 40.74 / area_ft2
+  Update head_count or total_gpm in ZONE_HEAD_ASSIGNMENTS and re-run to recalibrate.

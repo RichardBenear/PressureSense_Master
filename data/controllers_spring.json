@@ -1,0 +1,174 @@
+[
+    {
+      "id": "yard",
+      "name": "Yard",
+      "programs": [
+        {
+          "id": "A",
+          "days": [
+            0,
+            2,
+            4,
+            6
+          ],
+          "start": "05:00",
+          "zone_delay_sec": 0,
+          "seasonal_adjust_pct": 0,
+          "zones": [
+            {
+              "znumber": 1,
+              "zname": "Garage",
+              "avgpsi": 47,
+              "run": 25
+            },
+            {
+              "znumber": 2,
+              "zname": "South Yard",
+              "avgpsi": 48,
+              "run": 25
+            },
+            {
+              "znumber": 3,
+              "zname": "North Yard",
+              "avgpsi": 37,
+              "run": 25
+            },
+            {
+              "znumber": 4,
+              "zname": "West Yard",
+              "avgpsi": 49,
+              "run": 25
+            },
+            {
+              "znumber": 5,
+              "zname": "Around Pool",
+              "avgpsi": 43,
+              "run": 45
+            },
+            {
+              "znumber": 7,
+              "zname": "West Fence",
+              "avgpsi": 47,
+              "run": 25
+            },
+            {
+              "znumber": 8,
+              "zname": "South Fence",
+              "avgpsi": 37,
+              "run": 25
+            },
+            {
+              "znumber": 10,
+              "zname": "Block Wall",
+              "avgpsi": 56,
+              "run": 25
+            },
+            {
+              "znumber": 11,
+              "zname": "East Yard",
+              "avgpsi": 58,
+              "run": 25
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "field",
+      "name": "Field",
+      "programs": [
+        {
+          "id": "B",
+          "days": [
+            1,
+            3,
+            5
+          ],
+          "start": "19:37",
+          "zone_delay_sec": 0,
+          "seasonal_adjust_pct": 0,
+          "zones": [
+            {
+              "znumber": 2,
+              "zname": "Block Wall",
+              "avgpsi": 32,
+              "run": 36
+            },
+            {
+              "znumber": 3,
+              "zname": "East Fence",
+              "avgpsi": 49,
+              "run": 25
+            },
+            {
+              "znumber": 4,
+              "zname": "East Center",
+              "avgpsi": 38,
+              "run": 35
+            },
+            {
+              "znumber": 5,
+              "zname": "East Daylillies",
+              "avgpsi": 53,
+              "run": 39
+            },
+            {
+              "znumber": 6,
+              "zname": "Center",
+              "avgpsi": 31,
+              "run": 38
+            },
+            {
+              "znumber": 9,
+              "zname": "Vineyard+8",
+              "avgpsi": 51,
+              "run": 38
+            },
+            {
+              "znumber": 11,
+              "zname": "West Center",
+              "avgpsi": 35,
+              "run": 39
+            }
+          ]
+        },
+        {
+          "id": "A",
+          "days": [
+            2,
+            4,
+            6
+          ],
+          "start": "19:27",
+          "zone_delay_sec": 0,
+          "seasonal_adjust_pct": 0,
+          "zones": [
+            {
+              "znumber": 1,
+              "zname": "North Big Gun",
+              "avgpsi": 36,
+              "run": 25
+            },
+            {
+              "znumber": 7,
+              "zname": "North of Shed",
+              "avgpsi": 37,
+              "run": 25
+            },
+            {
+              "znumber": 10,
+              "zname": "South Big Gun",
+              "avgpsi": 34,
+              "run": 30
+            },
+            {
+              "znumber": 12,
+              "zname": "North Fence",
+              "avgpsi": 47,
+              "run": 23
+            }
+          ]
+        }
+      ]
+    }
+  ]

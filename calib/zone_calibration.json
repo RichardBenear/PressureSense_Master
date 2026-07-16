@@ -1,0 +1,490 @@
+{
+  "generated": "2026-06-29T12:21:35",
+  "svg_file": "..\\images\\sprinkler_mapVer8.svg",
+  "scale_x_ft_per_unit": 24.0059,
+  "scale_y_ft_per_unit": 26.029,
+  "zones": [
+    {
+      "controller": "field",
+      "zone_number": 1,
+      "zone_name": "North Big Gun",
+      "layers": [
+        "f_cov_1"
+      ],
+      "area_ft2": 14263,
+      "area_acres": 0.327,
+      "avgpsi": 36.0,
+      "head_type": "biggun",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 45.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 40.249,
+      "mm_per_min": 0.11497,
+      "notes": ""
+    },
+    {
+      "controller": "field",
+      "zone_number": 2,
+      "zone_name": "Block Wall",
+      "layers": [
+        "f_cov_2"
+      ],
+      "area_ft2": 9704,
+      "area_acres": 0.223,
+      "avgpsi": 32.0,
+      "head_type": "rotor5",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 5.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 4.216,
+      "mm_per_min": 0.0177,
+      "notes": ""
+    },
+    {
+      "controller": "field",
+      "zone_number": 3,
+      "zone_name": "East Fence",
+      "layers": [
+        "f_cov_3"
+      ],
+      "area_ft2": 7100,
+      "area_acres": 0.163,
+      "avgpsi": 49.0,
+      "head_type": "rotor5",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 5.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 5.217,
+      "mm_per_min": 0.02994,
+      "notes": ""
+    },
+    {
+      "controller": "field",
+      "zone_number": 4,
+      "zone_name": "East Center",
+      "layers": [
+        "f_cov_4"
+      ],
+      "area_ft2": 12491,
+      "area_acres": 0.287,
+      "avgpsi": 38.0,
+      "head_type": "rotor5",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 5.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 4.595,
+      "mm_per_min": 0.01499,
+      "notes": ""
+    },
+    {
+      "controller": "field",
+      "zone_number": 5,
+      "zone_name": "East Daylillies",
+      "layers": [
+        "f_cov_5"
+      ],
+      "area_ft2": 7753,
+      "area_acres": 0.178,
+      "avgpsi": 53.0,
+      "head_type": "rotor5",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 5.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 5.426,
+      "mm_per_min": 0.02851,
+      "notes": ""
+    },
+    {
+      "controller": "field",
+      "zone_number": 6,
+      "zone_name": "Center",
+      "layers": [
+        "f_cov_6"
+      ],
+      "area_ft2": 12201,
+      "area_acres": 0.28,
+      "avgpsi": 31.0,
+      "head_type": "rotor5",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 5.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 4.15,
+      "mm_per_min": 0.01386,
+      "notes": ""
+    },
+    {
+      "controller": "field",
+      "zone_number": 7,
+      "zone_name": "North of Shed",
+      "layers": [
+        "f_cov_7"
+      ],
+      "area_ft2": 14887,
+      "area_acres": 0.342,
+      "avgpsi": 37.0,
+      "head_type": "rotor5",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 5.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 4.534,
+      "mm_per_min": 0.01241,
+      "notes": ""
+    },
+    {
+      "controller": "field",
+      "zone_number": 9,
+      "zone_name": "Vineyard+8",
+      "layers": [
+        "f_cov_8",
+        "f_cov_9"
+      ],
+      "area_ft2": 18743,
+      "area_acres": 0.43,
+      "avgpsi": 51.0,
+      "head_type": "drip",
+      "head_count": null,
+      "is_drip": true,
+      "rated_gpm": null,
+      "rated_psi": null,
+      "total_gpm_override": 11.0,
+      "head_type_2": "popup3",
+      "head_count_2": 5,
+      "flow_gpm": 30.558,
+      "mm_per_min": 0.06643,
+      "notes": "Drip: 330ft x 6 lines / 1.5ft spacing x 0.5GPH = 11GPM + zone 8 parallel (5 heads x 3GPM = 15GPM)"
+    },
+    {
+      "controller": "field",
+      "zone_number": 10,
+      "zone_name": "South Big Gun",
+      "layers": [
+        "f_cov_10"
+      ],
+      "area_ft2": 12327,
+      "area_acres": 0.283,
+      "avgpsi": 34.0,
+      "head_type": "biggun",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 45.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 39.115,
+      "mm_per_min": 0.12928,
+      "notes": ""
+    },
+    {
+      "controller": "field",
+      "zone_number": 11,
+      "zone_name": "West Center",
+      "layers": [
+        "f_cov_11"
+      ],
+      "area_ft2": 17018,
+      "area_acres": 0.391,
+      "avgpsi": 35.0,
+      "head_type": "rotor5",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 5.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 4.41,
+      "mm_per_min": 0.01056,
+      "notes": ""
+    },
+    {
+      "controller": "field",
+      "zone_number": 12,
+      "zone_name": "North Fence",
+      "layers": [
+        "f_cov_12"
+      ],
+      "area_ft2": 12365,
+      "area_acres": 0.284,
+      "avgpsi": 47.0,
+      "head_type": "rotor5",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 5.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 5.11,
+      "mm_per_min": 0.01684,
+      "notes": ""
+    },
+    {
+      "controller": "yard",
+      "zone_number": 1,
+      "zone_name": "Garage",
+      "layers": [
+        "yd_cov_garage_south",
+        "yd_cov_garage_east"
+      ],
+      "area_ft2": 2645,
+      "area_acres": 0.061,
+      "avgpsi": 47.0,
+      "head_type": "rotor5",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 5.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 5.11,
+      "mm_per_min": 0.07871,
+      "notes": ""
+    },
+    {
+      "controller": "yard",
+      "zone_number": 2,
+      "zone_name": "South Yard",
+      "layers": [
+        "yd_cov_south",
+        "yd_cov_se"
+      ],
+      "area_ft2": 5378,
+      "area_acres": 0.123,
+      "avgpsi": 48.0,
+      "head_type": "rotor5",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 5.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 5.164,
+      "mm_per_min": 0.03912,
+      "notes": ""
+    },
+    {
+      "controller": "yard",
+      "zone_number": 3,
+      "zone_name": "North Yard",
+      "layers": [
+        "yd_cov_well",
+        "yd_cov_north"
+      ],
+      "area_ft2": 4562,
+      "area_acres": 0.105,
+      "avgpsi": 37.0,
+      "head_type": "rotor5",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 5.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 4.534,
+      "mm_per_min": 0.04049,
+      "notes": ""
+    },
+    {
+      "controller": "yard",
+      "zone_number": 4,
+      "zone_name": "West Yard",
+      "layers": [
+        "yd_cov_west"
+      ],
+      "area_ft2": 1937,
+      "area_acres": 0.044,
+      "avgpsi": 49.0,
+      "head_type": "rotor5",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 5.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 5.217,
+      "mm_per_min": 0.10974,
+      "notes": ""
+    },
+    {
+      "controller": "yard",
+      "zone_number": 5,
+      "zone_name": "Around Pool",
+      "layers": [
+        "yd_cov_pool_east",
+        "yd_cov_pool_west"
+      ],
+      "area_ft2": 3599,
+      "area_acres": 0.083,
+      "avgpsi": 43.0,
+      "head_type": "popup2",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 2.0,
+      "rated_psi": 30.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 2.394,
+      "mm_per_min": 0.0271,
+      "notes": ""
+    },
+    {
+      "controller": "yard",
+      "zone_number": 7,
+      "zone_name": "West Fence",
+      "layers": [
+        "yd_cov_west_fence"
+      ],
+      "area_ft2": 1892,
+      "area_acres": 0.043,
+      "avgpsi": 47.0,
+      "head_type": "rotor5",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 5.0,
+      "rated_psi": 45.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 5.11,
+      "mm_per_min": 0.11004,
+      "notes": ""
+    },
+    {
+      "controller": "yard",
+      "zone_number": 8,
+      "zone_name": "South Fence",
+      "layers": [
+        "yd_cov_south_fence"
+      ],
+      "area_ft2": 1603,
+      "area_acres": 0.037,
+      "avgpsi": 37.0,
+      "head_type": "popup2",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 2.0,
+      "rated_psi": 30.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 2.221,
+      "mm_per_min": 0.05645,
+      "notes": ""
+    },
+    {
+      "controller": "yard",
+      "zone_number": 10,
+      "zone_name": "Block Wall",
+      "layers": [
+        "yd_cov_blockwall"
+      ],
+      "area_ft2": 4274,
+      "area_acres": 0.098,
+      "avgpsi": 56.0,
+      "head_type": "popup2",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 2.0,
+      "rated_psi": 30.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 2.733,
+      "mm_per_min": 0.02605,
+      "notes": ""
+    },
+    {
+      "controller": "yard",
+      "zone_number": 11,
+      "zone_name": "East Yard",
+      "layers": [
+        "yd_cov_patio"
+      ],
+      "area_ft2": 1337,
+      "area_acres": 0.031,
+      "avgpsi": 58.0,
+      "head_type": "popup2",
+      "head_count": 1,
+      "is_drip": false,
+      "rated_gpm": 2.0,
+      "rated_psi": 30.0,
+      "total_gpm_override": null,
+      "head_type_2": null,
+      "head_count_2": null,
+      "flow_gpm": 2.781,
+      "mm_per_min": 0.08475,
+      "notes": ""
+    }
+  ],
+  "head_catalog": {
+    "biggun": {
+      "label": "Big Gun",
+      "rated_gpm": 45.0,
+      "rated_psi": 45.0
+    },
+    "rotor5": {
+      "label": "Rotor",
+      "rated_gpm": 5.0,
+      "rated_psi": 45.0
+    },
+    "popup2": {
+      "label": "Pop-up",
+      "rated_gpm": 2.0,
+      "rated_psi": 30.0
+    },
+    "popup3": {
+      "label": "Pop-up",
+      "rated_gpm": 3.0,
+      "rated_psi": 30.0
+    },
+    "rotor3": {
+      "label": "Rotor",
+      "rated_gpm": 3.0,
+      "rated_psi": 45.0
+    },
+    "drip": {
+      "rated_gpm": null,
+      "rated_psi": null,
+      "label": "Drip"
+    },
+    "custom": {
+      "rated_gpm": null,
+      "rated_psi": null,
+      "label": "Custom"
+    }
+  }
+}

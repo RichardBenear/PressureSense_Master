@@ -1,0 +1,913 @@
+{
+  "log": [
+    {
+      "date": "2026-06-28",
+      "et0_mm": 4.44,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 13.32,
+          "water_applied_mm": 0,
+          "adjust_pct": 150,
+          "skipped": false,
+          "programs": []
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 13.32,
+          "water_applied_mm": 0,
+          "adjust_pct": 150,
+          "skipped": false,
+          "programs": []
+        }
+      ]
+    },
+    {
+      "date": "2026-06-28",
+      "et0_mm": 3.32,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 16.64,
+          "water_applied_mm": 0,
+          "adjust_pct": 150,
+          "skipped": false,
+          "programs": []
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 16.64,
+          "water_applied_mm": 0,
+          "adjust_pct": 150,
+          "skipped": false,
+          "programs": []
+        }
+      ]
+    },
+    {
+      "date": "2026-06-28",
+      "et0_mm": 3.32,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 3.32,
+          "water_applied_mm": 0,
+          "adjust_pct": 55,
+          "skipped": false,
+          "programs": []
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 3.32,
+          "water_applied_mm": 0,
+          "adjust_pct": 55,
+          "skipped": false,
+          "programs": []
+        }
+      ]
+    },
+    {
+      "date": "2026-06-28",
+      "et0_mm": 3.32,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 6.64,
+          "water_applied_mm": 0,
+          "adjust_pct": 111,
+          "skipped": false,
+          "programs": []
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 6.64,
+          "water_applied_mm": 0,
+          "adjust_pct": 111,
+          "skipped": false,
+          "programs": []
+        }
+      ]
+    },
+    {
+      "date": "2026-06-28",
+      "et0_mm": 3.32,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 3.32,
+          "water_applied_mm": 0,
+          "adjust_pct": 55,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 3.32,
+              "water_applied_mm": 0,
+              "adjust_pct": 55
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 3.32,
+          "water_applied_mm": 0,
+          "adjust_pct": 55,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 3.32,
+              "water_applied_mm": 0,
+              "adjust_pct": 55
+            },
+            {
+              "program": "A",
+              "deficit_mm": 3.32,
+              "water_applied_mm": 0,
+              "adjust_pct": 55
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-06-28",
+      "et0_mm": 3.34,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 3.34,
+          "water_applied_mm": 0,
+          "adjust_pct": 33,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 3.34,
+              "water_applied_mm": 0,
+              "adjust_pct": 33
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 3.34,
+          "water_applied_mm": 0,
+          "adjust_pct": 33,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 3.34,
+              "water_applied_mm": 0,
+              "adjust_pct": 33
+            },
+            {
+              "program": "A",
+              "deficit_mm": 3.34,
+              "water_applied_mm": 0,
+              "adjust_pct": 33
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-06-29",
+      "et0_mm": 3.48,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 6.82,
+          "water_applied_mm": 0,
+          "adjust_pct": 68,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 6.82,
+              "water_applied_mm": 0,
+              "adjust_pct": 68
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 5.08,
+          "water_applied_mm": 1.74,
+          "adjust_pct": 49,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 3.81,
+              "water_applied_mm": 3.01,
+              "adjust_pct": 38
+            },
+            {
+              "program": "A",
+              "deficit_mm": 6.82,
+              "water_applied_mm": 0,
+              "adjust_pct": 68
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-06-30",
+      "et0_mm": 5.91,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 6.98,
+          "water_applied_mm": 5.75,
+          "adjust_pct": 67,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 6.98,
+              "water_applied_mm": 5.75,
+              "adjust_pct": 67
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 9.48,
+          "water_applied_mm": 1.5,
+          "adjust_pct": 95,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 9.72,
+              "water_applied_mm": 0,
+              "adjust_pct": 97
+            },
+            {
+              "program": "A",
+              "deficit_mm": 9.15,
+              "water_applied_mm": 3.58,
+              "adjust_pct": 91
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-01",
+      "et0_mm": 6.55,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 13.53,
+          "water_applied_mm": 0,
+          "adjust_pct": 132,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 13.53,
+              "water_applied_mm": 0,
+              "adjust_pct": 132
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 13.65,
+          "water_applied_mm": 2.38,
+          "adjust_pct": 124,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 12.16,
+              "water_applied_mm": 4.11,
+              "adjust_pct": 110
+            },
+            {
+              "program": "A",
+              "deficit_mm": 15.7,
+              "water_applied_mm": 0,
+              "adjust_pct": 149
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-02",
+      "et0_mm": 7.1,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 9.45,
+          "water_applied_mm": 11.18,
+          "adjust_pct": 89,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 9.45,
+              "water_applied_mm": 11.18,
+              "adjust_pct": 89
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 17.65,
+          "water_applied_mm": 3.1,
+          "adjust_pct": 144,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 19.26,
+              "water_applied_mm": 0,
+              "adjust_pct": 146
+            },
+            {
+              "program": "A",
+              "deficit_mm": 15.43,
+              "water_applied_mm": 7.37,
+              "adjust_pct": 142
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-02",
+      "et0_mm": 5.63,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 5.63,
+          "water_applied_mm": 0,
+          "adjust_pct": 94,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 5.63,
+              "water_applied_mm": 0,
+              "adjust_pct": 94
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 5.53,
+          "water_applied_mm": 0.1,
+          "adjust_pct": 91,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 5.46,
+              "water_applied_mm": 0.17,
+              "adjust_pct": 90
+            },
+            {
+              "program": "A",
+              "deficit_mm": 5.63,
+              "water_applied_mm": 0,
+              "adjust_pct": 94
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-02",
+      "et0_mm": 7.27,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 7.27,
+          "water_applied_mm": 0,
+          "adjust_pct": 121,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 7.27,
+              "water_applied_mm": 0,
+              "adjust_pct": 121
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 7.26,
+          "water_applied_mm": 0.01,
+          "adjust_pct": 121,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 7.25,
+              "water_applied_mm": 0.02,
+              "adjust_pct": 120
+            },
+            {
+              "program": "A",
+              "deficit_mm": 7.27,
+              "water_applied_mm": 0,
+              "adjust_pct": 121
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-02",
+      "et0_mm": 7.27,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 14.54,
+          "water_applied_mm": 0,
+          "adjust_pct": 150,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 14.54,
+              "water_applied_mm": 0,
+              "adjust_pct": 150
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 14.52,
+          "water_applied_mm": 0,
+          "adjust_pct": 150,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 14.51,
+              "water_applied_mm": 0.01,
+              "adjust_pct": 150
+            },
+            {
+              "program": "A",
+              "deficit_mm": 14.54,
+              "water_applied_mm": 0,
+              "adjust_pct": 150
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-02",
+      "et0_mm": 7.6,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 7.6,
+          "water_applied_mm": 0,
+          "adjust_pct": 127,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 7.6,
+              "water_applied_mm": 0,
+              "adjust_pct": 127
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 7.59,
+          "water_applied_mm": 0.01,
+          "adjust_pct": 127,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 7.58,
+              "water_applied_mm": 0.02,
+              "adjust_pct": 127
+            },
+            {
+              "program": "A",
+              "deficit_mm": 7.6,
+              "water_applied_mm": 0,
+              "adjust_pct": 127
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-02",
+      "et0_mm": 7.6,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 15.2,
+          "water_applied_mm": 0,
+          "adjust_pct": 150,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 15.2,
+              "water_applied_mm": 0,
+              "adjust_pct": 150
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 15.19,
+          "water_applied_mm": 0,
+          "adjust_pct": 150,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 15.18,
+              "water_applied_mm": 0.01,
+              "adjust_pct": 150
+            },
+            {
+              "program": "A",
+              "deficit_mm": 15.2,
+              "water_applied_mm": 0,
+              "adjust_pct": 150
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-02",
+      "et0_mm": 6.73,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 6.73,
+          "water_applied_mm": 0,
+          "adjust_pct": 112,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 6.73,
+              "water_applied_mm": 0,
+              "adjust_pct": 112
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 6.72,
+          "water_applied_mm": 0.01,
+          "adjust_pct": 112,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 6.71,
+              "water_applied_mm": 0.02,
+              "adjust_pct": 111
+            },
+            {
+              "program": "A",
+              "deficit_mm": 6.73,
+              "water_applied_mm": 0,
+              "adjust_pct": 112
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-02",
+      "et0_mm": 6.73,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 13.46,
+          "water_applied_mm": 0,
+          "adjust_pct": 150,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 13.46,
+              "water_applied_mm": 0,
+              "adjust_pct": 150
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 13.45,
+          "water_applied_mm": 0,
+          "adjust_pct": 150,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 13.44,
+              "water_applied_mm": 0,
+              "adjust_pct": 150
+            },
+            {
+              "program": "A",
+              "deficit_mm": 13.46,
+              "water_applied_mm": 0,
+              "adjust_pct": 150
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-03",
+      "et0_mm": 7.12,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 20.58,
+          "water_applied_mm": 0,
+          "adjust_pct": 150,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 20.58,
+              "water_applied_mm": 0,
+              "adjust_pct": 150
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 20.56,
+          "water_applied_mm": 0.01,
+          "adjust_pct": 150,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 20.54,
+              "water_applied_mm": 0.02,
+              "adjust_pct": 150
+            },
+            {
+              "program": "A",
+              "deficit_mm": 20.58,
+              "water_applied_mm": 0,
+              "adjust_pct": 150
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-03",
+      "et0_mm": 7.28,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 7.21,
+          "water_applied_mm": 0.07,
+          "adjust_pct": 120,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 7.21,
+              "water_applied_mm": 0.07,
+              "adjust_pct": 120
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 7.28,
+          "water_applied_mm": 0,
+          "adjust_pct": 121,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 7.28,
+              "water_applied_mm": 0,
+              "adjust_pct": 121
+            },
+            {
+              "program": "A",
+              "deficit_mm": 7.28,
+              "water_applied_mm": 0,
+              "adjust_pct": 121
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-03",
+      "et0_mm": 7.81,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 7.77,
+          "water_applied_mm": 0.04,
+          "adjust_pct": 120,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 7.77,
+              "water_applied_mm": 0.04,
+              "adjust_pct": 120
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 7.81,
+          "water_applied_mm": 0,
+          "adjust_pct": 120,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 7.81,
+              "water_applied_mm": 0,
+              "adjust_pct": 120
+            },
+            {
+              "program": "A",
+              "deficit_mm": 7.81,
+              "water_applied_mm": 0,
+              "adjust_pct": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-03",
+      "et0_mm": 7.54,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 7.38,
+          "water_applied_mm": 0.16,
+          "adjust_pct": 100,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 7.38,
+              "water_applied_mm": 0.16,
+              "adjust_pct": 100
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 7.54,
+          "water_applied_mm": 0,
+          "adjust_pct": 101,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 7.54,
+              "water_applied_mm": 0,
+              "adjust_pct": 101
+            },
+            {
+              "program": "A",
+              "deficit_mm": 7.54,
+              "water_applied_mm": 0,
+              "adjust_pct": 101
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-03",
+      "et0_mm": 7.54,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 7.28,
+          "water_applied_mm": 0.26,
+          "adjust_pct": 95,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 7.28,
+              "water_applied_mm": 0.26,
+              "adjust_pct": 95
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 7.54,
+          "water_applied_mm": 0,
+          "adjust_pct": 101,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 7.54,
+              "water_applied_mm": 0,
+              "adjust_pct": 101
+            },
+            {
+              "program": "A",
+              "deficit_mm": 7.54,
+              "water_applied_mm": 0,
+              "adjust_pct": 101
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-07-03",
+      "et0_mm": 7.54,
+      "precip_mm": 0,
+      "controllers": [
+        {
+          "controller": "yard",
+          "deficit_mm": 7.54,
+          "water_applied_mm": 0,
+          "adjust_pct": 126,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "A",
+              "deficit_mm": 7.54,
+              "water_applied_mm": 0,
+              "adjust_pct": 126
+            }
+          ]
+        },
+        {
+          "controller": "field",
+          "deficit_mm": 7.54,
+          "water_applied_mm": 0,
+          "adjust_pct": 126,
+          "skipped": false,
+          "programs": [
+            {
+              "program": "B",
+              "deficit_mm": 7.54,
+              "water_applied_mm": 0,
+              "adjust_pct": 126
+            },
+            {
+              "program": "A",
+              "deficit_mm": 7.54,
+              "water_applied_mm": 0,
+              "adjust_pct": 126
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

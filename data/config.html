@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PressureSense — Configuration</title>
+  <meta content="noindex, nofollow" name="robots" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600&family=Barlow+Condensed:wght@500;700&display=swap" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="ag-page">
+
+  <div class="ag-rotate-block">
+    <div class="ag-rotate-block-icon">&#8635;</div>
+    <div class="ag-rotate-block-text">Rotate your device to landscape to use the Configuration page</div>
+  </div>
+
+  <div class="ag-root">
+
+    <header class="ag-header">
+      <div class="ag-logo">
+        <svg class="ag-logo-mark" width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="gf" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stop-color="#1e2f50"/>
+              <stop offset="100%" stop-color="#080f1f"/>
+            </radialGradient>
+          </defs>
+          <circle cx="22" cy="22" r="21" fill="url(#gf)" stroke="#1a5fcc" stroke-width="1.5"/>
+          <path d="M 6.4 31 A 18 18 0 1 1 37.6 31" fill="none" stroke="#1a2a44" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M 6.4 31 A 18 18 0 0 1 25 4" fill="none" stroke="#0d6efd" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="6.4" y1="31" x2="9" y2="29.5" stroke="#4466aa" stroke-width="1"/>
+          <line x1="6.4" y1="13" x2="9" y2="14.5" stroke="#4466aa" stroke-width="1"/>
+          <line x1="22" y1="4" x2="22" y2="7" stroke="#4466aa" stroke-width="1"/>
+          <line x1="37.6" y1="13" x2="35" y2="14.5" stroke="#4466aa" stroke-width="1"/>
+          <line x1="37.6" y1="31" x2="35" y2="29.5" stroke="#4466aa" stroke-width="1"/>
+          <line x1="22" y1="22" x2="24" y2="9" stroke="#ff4433" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="22" y1="22" x2="21" y2="26" stroke="#cc2211" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="22" cy="22" r="2.5" fill="#ccddff" stroke="#fff" stroke-width="0.5"/>
+          <text x="22" y="37" text-anchor="middle" font-size="5" fill="#6688bb" font-family="sans-serif" font-weight="bold" letter-spacing="0.8">PSI</text>
+        </svg>
+        <div>
+          <div class="ag-brand">PRESSURE<span>SENSE</span></div>
+          <!--<div class="ag-version">FIRMWARE v2.4.1 — ESP32C6</div>-->
+        </div>
+      </div>
+      <nav class="ag-nav">
+        <a href="index.html">CHART</a>
+        <a href="config.html" class="active">CONFIG</a>
+        <a href="calibration.html">CALIB</a>
+        <a href="map.html">MAP</a>
+        <a href="files.html">FILES</a>
+      </nav>
+    </header>
+
+    <div class="ag-status-bar">
+      <div class="ag-status-dot"></div>
+      <div class="ag-status-item">SYSTEM <span class="val" id="system-status">ONLINE</span></div>
+      <span class="ag-status-sep">|</span>
+      <div class="ag-status-item">LOCATION <span class="val" id="loc-display">—</span></div>
+      <span class="ag-status-sep">|</span>
+      <div class="ag-status-item">ZONES LOADED <span class="val" id="zone-count">—</span></div>
+      <span class="ag-status-sep">|</span>
+      <div class="ag-status-item">UNSAVED CHANGES <span class="val" id="unsaved-indicator">NONE</span></div>
+    </div>
+
+    <div class="ag-body">
+
+      <div id="toast" class="ag-toast hidden">
+        <span class="ag-toast-icon">&#10003;</span>
+        <span id="toast-msg">Settings saved.</span>
+      </div>
+
+      <!-- Zone Configuration -->
+      <div class="ag-section">
+        <div class="ag-section-header">
+          <div class="ag-section-title">&#9776; Zone Configuration</div>
+          <div class="ag-toolbar">
+            <button class="ag-btn ag-btn-ghost ag-btn-sm" id="load-sd-zone-table">&#8635; Reload</button>
+            <button class="ag-btn ag-btn-primary ag-btn-sm" id="zone-form-submit">&#128190; Save Zone Config</button>
+          </div>
+        </div>
+        <div class="ag-section-body" style="padding:0;">
+          <div class="ag-table-toolbar">
+            <span class="ag-help-text">Seasonal variants: Load External then set as Active.</span>
+            <div class="ag-toolbar-row">
+              <select id="jsonFileSelector" class="ag-select"></select>
+              <button class="ag-btn ag-btn-ghost ag-btn-sm" id="load-spiffs-zone-table">Load External</button>
+            </div>
+            <div class="ag-toolbar-row">
+              <span class="ag-current-file">Save As:</span>
+              <input class="ag-input ag-save-file-input" id="save-zone-filename" type="text" value="controllers.json" maxlength="35" />
+            </div>
+            <div class="ag-toolbar-row">
+              <span class="ag-current-file">Current File: <span id="current-zone-file">—</span></span>
+            </div>
+            <div class="ag-toolbar-row">
+              <button class="ag-btn ag-btn-primary ag-btn-sm" id="activate-zone-schedule">Set as Active Schedule</button>
+              <span class="ag-help-text">Writes the schedule currently loaded/edited to controllers.json (the live schedule)</span>
+            </div>
+          </div>
+          <div id="config-controllers" class="ag-config-controllers"></div>
+        </div>
+      </div>
+
+      <!-- Site Identity -->
+      <div class="ag-section">
+        <div class="ag-section-header">
+          <div class="ag-section-title">&#9711; Site Identity</div>
+        </div>
+        <div class="ag-section-body">
+          <div class="ag-field-row">
+            <span class="ag-field-label">Location Name</span>
+            <input class="ag-input" id="loc-input" type="text" maxlength="30" placeholder="e.g. Silver Creek Ranch" />
+            <button class="ag-btn ag-btn-primary" id="loc-submit">&#10003; Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weather & Auto-Adjust -->
+      <div class="ag-section">
+        <div class="ag-section-header">
+          <div class="ag-section-title">&#9729; Weather &amp; Auto-Adjust</div>
+          <div class="ag-toolbar">
+            <button class="ag-btn ag-btn-ghost ag-btn-sm" id="weather-fetch-now-btn">&#8635; Fetch Now</button>
+            <button class="ag-btn ag-btn-primary ag-btn-sm" id="weather-settings-submit">&#10003; Save</button>
+          </div>
+        </div>
+        <div class="ag-section-body">
+          <div class="ag-field-row ag-field-row-compact" style="margin-bottom:10px;">
+            <label class="ag-field-label" style="min-width:auto; cursor:pointer;">
+              <input type="checkbox" id="weather-enabled-input" checked="checked"/> Fetch Weather Data
+            </label>
+            <label class="ag-field-label" style="min-width:auto; cursor:pointer;">
+              <input type="checkbox" id="weather-auto-adjust-input" checked="checked"/> Apply to Schedules
+            </label>
+          </div>
+
+          <div id="weather-status-line" class="ag-manual-state muted" style="margin-bottom:6px;">No fetch yet.</div>
+          <div id="weather-active-indicator" class="ag-manual-state muted" style="margin-bottom:10px;">○ ADJUSTMENTS NOT APPLIED — "Apply to Schedules" is off</div>
+
+          <div class="ag-field-row ag-field-row-compact" style="margin-bottom:8px;">
+            <span class="ag-field-label" style="min-width:62px;">Latitude</span>
+            <input class="ag-input" id="weather-lat-input" type="number" step="0.001" style="width:80px; flex:none;" />
+            <span class="ag-field-sep">&#8226;</span>
+            <span class="ag-field-label" style="min-width:67px;">Longitude</span>
+            <input class="ag-input" id="weather-lon-input" type="number" step="0.001" style="width:90px; flex:none;" />
+            <span class="ag-field-sep">&#8226;</span>
+            <span class="ag-field-label" style="min-width:62px;">Timezone</span>
+            <select class="ag-select" id="weather-timezone-input" style="width:160px; flex:none;">
+              <option value="America/New_York">Eastern (New York)</option>
+              <option value="America/Chicago">Central (Chicago)</option>
+              <option value="America/Denver">Mountain (Denver)</option>
+              <option value="America/Phoenix">Mountain no DST (Phoenix)</option>
+              <option value="America/Los_Angeles">Pacific (Los Angeles)</option>
+              <option value="America/Anchorage">Alaska (Anchorage)</option>
+              <option value="Pacific/Honolulu">Hawaii (Honolulu)</option>
+            </select>
+          </div>
+          <div class="ag-field-row ag-field-row-compact" style="margin-bottom:8px;">
+            <span class="ag-field-label" style="min-width:90px;">Reference deficit</span>
+            <input class="ag-input" id="weather-reference-deficit-input" type="number" step="0.5" style="width:65px; flex:none;" /><span class="ag-input-unit">mm</span>
+            <span class="ag-field-sep">&#8226;</span>
+            <span class="ag-field-label" style="min-width:80px;">Max deficit</span>
+            <input class="ag-input" id="weather-max-deficit-input" type="number" step="0.5" style="width:70px; flex:none;" /><span class="ag-input-unit">mm</span>
+            <span class="ag-field-sep">&#8226;</span>
+            <span class="ag-field-label" style="min-width:80px;">Rain skip &gt;</span>
+            <input class="ag-input" id="weather-rain-skip-input" type="number" step="0.5" style="width:65px; flex:none;" /><span class="ag-input-unit">mm</span>
+          </div>
+          <div class="ag-field-row ag-field-row-compact">
+            <span class="ag-field-label" style="min-width:90px;">Min adjustment</span>
+            <input class="ag-input" id="weather-min-adjust-input" type="number" style="width:60px; flex:none;" /><span class="ag-input-unit">%</span>
+            <span class="ag-field-sep">&#8226;</span>
+            <span class="ag-field-label" style="min-width:90px;">Max adjustment</span>
+            <input class="ag-input" id="weather-max-adjust-input" type="number" style="width:65px; flex:none;" /><span class="ag-input-unit">%</span>
+            <span class="ag-field-sep">&#8226;</span>
+            <span class="ag-field-label" style="min-width:80px;">mm/min default</span>
+            <input class="ag-input" id="weather-mm-per-min-input" type="number" step="0.01" style="width:70px; flex:none;" />
+          </div>
+          <br>
+          <!-- One full tiles+legend+chart+toggle block per controller --
+               populated by config.js's renderAllControllerWeatherBlocks(),
+               since Yard and Field water physically separate areas and each
+               now tracks its own deficit (see implementation plan). -->
+          <div id="weather-controller-blocks"></div>
+        </div>
+      </div>
+
+      <!-- Sensor Rate -->
+      <div class="ag-section">
+        <div class="ag-section-header">
+          <div class="ag-section-title">&#9202; Sensor Rate</div>
+        </div>
+        <div class="ag-section-body">
+          <div class="ag-field-row" style="margin-bottom:10px;">
+            <span class="ag-field-label" style="min-width:80px;">Interval</span>
+            <input class="ag-input" id="sensor-rate-input" type="number" value="30" min="5" max="3600" style="width:80px; flex:none;" />
+            <span class="ag-input-unit">SEC</span>
+            <button class="ag-btn ag-btn-primary ag-btn-sm" id="sensor-rate-submit">Save</button>
+          </div>
+          <div class="ag-derived-stats">
+            READS / MIN &nbsp;<span id="rpm-out">—</span><br>
+            READS / HOUR &nbsp;<span id="rph-out">—</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <footer class="ag-footer">
+      <div class="ag-footer-right">
+        <span>SD CARD: <span id="footer-sd" style="color:#22c55e;">—</span></span>
+        <span>WIFI: <span id="footer-wifi" style="color:#22c55e;">—</span></span>
+        <span>UPTIME: <span id="footer-uptime" style="color:#5ba4d9;">—</span></span>
+        <span>REMOTE: <span id="footer-remote" style="color:#22c55e;">—</span></span>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="net-utils.js" defer></script>
+  <script src="zone-utils.js" defer></script>
+  <script src="config.js" defer></script>
+</body>
+</html>

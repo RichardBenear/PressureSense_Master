@@ -1,0 +1,18 @@
+{
+  "name": "Meadowlark",
+  "sensor_interval_sec": 20,
+  "psi_offset": 0,
+  "latitude": 43.73,
+  "longitude": -116.37,
+  "timezone": "America/Denver",
+  "mm_per_min_default": 0.14,
+  "weather": {
+    "enabled": true,
+    "auto_adjust": false,
+    "reference_deficit_mm": 6,
+    "max_deficit_mm": 25,
+    "max_adjust_pct": 150,
+    "min_adjust_pct": 0,
+    "rain_skip_threshold_mm": 6
+  }
+}
