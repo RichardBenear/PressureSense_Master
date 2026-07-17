@@ -153,6 +153,15 @@ static uint16_t psiColor(float psi, bool allOff) {
     return C_RED;
 }
 
+// Mirrors the -60/-75dBm good/fair break points typical of Wi-Fi signal
+// meters; -87dBm has been observed in the field as a barely-usable link
+// (see the TCP keepalive comment in main.cpp).
+static uint16_t rssiColor(int rssi) {
+    if (rssi >= -60) return C_GREEN;
+    if (rssi >= -75) return C_AMBER;
+    return C_RED;
+}
+
 static int parseClockSeconds(const String& timeLabel) {
     if (timeLabel.length() < 5) return -1;
     int h = timeLabel.substring(0, 2).toInt();
@@ -249,7 +258,7 @@ void initTftDisplay() {
 //  New parameters vs. original:
 //    alertZoneName        — name of first low-PSI zone, empty string = no alert
 
-void updateTftDisplay(float psi, IPAddress ip,
+void updateTftDisplay(float psi, IPAddress ip, int wifiRssi,
                       const ZoneInfo& zone, const String& timeLabel,
                       const float* history, const uint8_t* zoneHistory,
                       int historyCount,
@@ -270,12 +279,23 @@ void updateTftDisplay(float psi, IPAddress ip,
 
     // ── Header (y=0..31) ───────────────────────────────────────────────────────
 
-    // Left: IP address (top line) + mDNS hostname (bottom line)
+    // Left: IP address + signal strength (top line) + mDNS hostname (bottom line)
     tft.setTextDatum(ML_DATUM);
     tft.setTextColor(C_BLUE_HI, C_BG_HEADER);
     tft.setTextSize(1);
-    tft.drawString(ip.toString(), 6, 10);
-    tft.drawString("pressuresense.local", 6, 22);
+    String ipStr = ip.toString();
+    tft.drawString(ipStr, 6, 10);
+    int ipEndX = 6 + tft.textWidth(ipStr);
+
+    tft.setTextColor(C_DIM, C_BG_HEADER);
+    tft.drawString(".", ipEndX + 2, 10);
+    int dotEndX = ipEndX + 2 + tft.textWidth(".");
+
+    tft.setTextColor(rssiColor(wifiRssi), C_BG_HEADER);
+    tft.drawString(String(wifiRssi) + "dBm", dotEndX + 2, 10);
+
+    tft.setTextColor(C_BLUE_HI, C_BG_HEADER);
+    tft.drawString("pressure-sense.local", 6, 22);
 
     // Centre: zone name pill (amber) or idle pill (dim)
     //if (zone.allOff) {

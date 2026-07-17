@@ -2677,6 +2677,14 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
 		case WS_EVT_CONNECT:
 			Serial.printf("[WS] Client #%u connected from %s (active=%u)\n",
 			              client->id(), client->remoteIP().toString().c_str(), (unsigned)ws.count());
+			// Some Wi-Fi extenders/travel-routers run their own NAT/connection-
+			// tracking even for LAN-local traffic, with idle timeouts shorter
+			// than the ~30s gap between sensor broadcasts (sensorRateSec) -- long
+			// enough for the mapping to get reclaimed and silently start
+			// dropping this socket's packets in both directions, with neither
+			// side ever seeing a FIN/RST. A WS-level auto-ping well under that
+			// window keeps the mapping warm regardless of app data cadence.
+			client->keepAlivePeriod(15);
 			if (firstReadingDone) client->text(buildSensorUpdateJson());
 			break;
 
@@ -2878,12 +2886,13 @@ void setup() {
 	Serial.flush();
 	initWiFi();
 	if (WiFi.status() == WL_CONNECTED) {
+		//MDNS.end();
 		IPmessage = WiFi.localIP();
 		Serial.print("[2] WiFi OK, IP: ");
 		Serial.println(IPmessage);
-		if (MDNS.begin("pressuresense")) {
+		if (MDNS.begin("pressure-sense")) {
 			MDNS.addService("http", "tcp", 80);
-			Serial.println("[2] mDNS started: pressuresense.local (http service advertised)");
+			Serial.println("[2] mDNS started: pressure-sense.local (http service advertised)");
 		} else {
 			Serial.println("[2] mDNS failed to start");
 		}
@@ -3699,6 +3708,27 @@ void setup() {
 	ws.onEvent(onWsEvent);
 	server.addHandler(&ws);
 
+	// A PC going to sleep silently stops responding on TCP (no FIN sent), so any
+	// connection it was keeping alive -- a page load's fetch(), an XHR poll --
+	// stays "established" on the ESP32 forever once the library disables its own
+	// per-request RX timeout after the first response (ESPAsyncWebServer's
+	// WebRequest.cpp _send(): setRxTimeout(0), permanent, to avoid killing
+	// legitimate idle keep-alive connections). With CONFIG_LWIP_MAX_ACTIVE_TCP
+	// fixed at 16 (see platformio.ini), enough zombie connections accumulate
+	// across sleep/wake cycles to exhaust the socket budget, hanging all new
+	// requests. TCP keepalive lets lwIP itself detect and reap a dead peer
+	// without needing app-level traffic.
+	// idle=8s x 4 probes (~40s worst case) rather than something tighter --
+	// on a weak Wi-Fi link (seen as low as -87dBm RSSI in the field) a
+	// multi-second gap with no successful ACK can happen on an otherwise-
+	// still-alive connection, and a too-aggressive timeout here would tear
+	// down a slow-but-recoverable transfer (e.g. the /get-data-file CSV
+	// stream) that would have limped through on its own.
+	server.addMiddleware([](AsyncWebServerRequest *request, ArMiddlewareNext next) {
+		request->client()->setKeepAlive(8000, 4);
+		next();
+	});
+
 	// /sensor-rate-input, /calib-input, /loc-input were retired -- site fields
 	// save through /submit-zone-form now (decision #4).
 
@@ -3848,7 +3878,7 @@ void loop() {
 		}
 
 		getTimeStamp(currentDayStamp, currentTimeStamp);
-		updateTftDisplay(currentPressure, IPmessage, zone,
+		updateTftDisplay(currentPressure, IPmessage, WiFi.RSSI(), zone,
 		                 currentTimeStamp, pressureHistory, zoneHistory, historyCount,
 		                 (int)(timerDelay / 1000), alertZoneName);
 		logData();

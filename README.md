@@ -26,7 +26,7 @@ Pin assignments, sensor calibration constants, and LoRa radio parameters are all
 
 ## Web UI
 
-Served from SPIFFS at the device's IP, or `http://pressuresense.local/` via mDNS (Windows PCs need Apple's free [Bonjour Print Services](https://support.apple.com/kb/DL999) installed once for `.local` names to resolve — macOS and iOS support this natively). Five pages share `data/style.css`:
+Served from SPIFFS at the device's IP, or `http://pressure-sense.local/` via mDNS (Windows PCs need Apple's free [Bonjour Print Services](https://support.apple.com/kb/DL999) installed once for `.local` names to resolve — macOS and iOS support this natively). Five pages share `data/style.css`:
 
 | Page | Files | Purpose |
 | --- | --- | --- |
@@ -148,7 +148,7 @@ All routes are registered in `setup()` in `src/main.cpp`. Static assets (the `da
    ```
    pio device monitor
    ```
-5. Visit `http://pressuresense.local/` (mDNS) or the IP address printed on boot. **Windows users:** `.local` hostnames aren't resolved by Windows out of the box — install Apple's free [Bonjour Print Services](https://support.apple.com/kb/DL999) once, or just use the IP address shown on the TFT/serial log. macOS and iOS resolve `.local` natively, no install needed.
+5. Visit `http://pressure-sense.local/` (mDNS) or the IP address printed on boot. **Windows users:** `.local` hostnames aren't resolved by Windows out of the box — install Apple's free [Bonjour Print Services](https://support.apple.com/kb/DL999) once, or just use the IP address shown on the TFT/serial log. macOS and iOS resolve `.local` natively, no install needed.
 
 Subsequent firmware updates can go over the air via ElegantOTA at `<device-ip>/update` once the device is reachable on WiFi.
 
@@ -157,7 +157,7 @@ Subsequent firmware updates can go over the air via ElegantOTA at `<device-ip>/u
 ```
 [1]  TFT display init
 [1b] LoRa radio init (RYLR998 AT config)
-[2]  WiFi connect + mDNS (pressuresense.local)
+[2]  WiFi connect + mDNS (pressure-sense.local)
 [3]  SPIFFS mount
 [4]  SD card mount
 [5]  NTP time sync

@@ -15,15 +15,40 @@
 // the promise, so existing try/catch call sites recover on their own (and
 // polling loops simply retry on their next tick) -- this only bounds the
 // wait, it doesn't change any call site's behavior on success.
+//
+// GET requests additionally get a couple of automatic retries on a network-
+// level failure (timeout above, or a mid-transfer drop like
+// ERR_CONNECTION_RESET) -- on a weak Wi-Fi link a single lost packet can
+// otherwise leave the chart/pulldowns blank until the next manual reload.
+// POST is deliberately excluded: retrying a request whose response (but not
+// necessarily its server-side effect) was lost could double-fire a real
+// action, e.g. starting a manual zone run twice.
 const FETCH_TIMEOUT_MS = 10000;
+const FETCH_RETRY_COUNT = 2;
+const FETCH_RETRY_DELAY_MS = 800;
 const _nativeFetch = window.fetch.bind(window);
-window.fetch = function (input, init) {
+
+function _fetchOnce(input, init) {
   init = init || {};
   if (init.signal) return _nativeFetch(input, init);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   return _nativeFetch(input, Object.assign({}, init, { signal: controller.signal }))
     .finally(() => clearTimeout(timer));
+}
+
+window.fetch = async function (input, init) {
+  const method = ((init && init.method) || 'GET').toUpperCase();
+  if (method !== 'GET' || (init && init.signal)) return _fetchOnce(input, init);
+
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await _fetchOnce(input, init);
+    } catch (e) {
+      if (attempt >= FETCH_RETRY_COUNT) throw e;
+      await new Promise(resolve => setTimeout(resolve, FETCH_RETRY_DELAY_MS * (attempt + 1)));
+    }
+  }
 };
 
 // 2. Detects a real sleep/wake (not just an alt-tab) so callers can force a

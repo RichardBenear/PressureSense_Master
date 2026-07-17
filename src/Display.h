@@ -22,7 +22,7 @@ struct ZoneInfo {
 };
 
 void initTftDisplay();
-void updateTftDisplay(float psi, IPAddress ip,
+void updateTftDisplay(float psi, IPAddress ip, int wifiRssi,
                       const ZoneInfo& zone, const String& timeLabel,
                       const float* history, const uint8_t* zoneHistory,
                       int historyCount,

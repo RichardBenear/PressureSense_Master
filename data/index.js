@@ -344,7 +344,18 @@ const chart = Highcharts.chart('chart-pressure', {
     style: { fontFamily: "'Share Tech Mono', monospace" },
     animation: false,
     zooming: {
-      type: 'x'
+      type: 'x',
+      resetButton: {
+        // Defines the reference box for positioning ('plotBox' or 'spacingBox')
+        relativeTo: 'spacingBox', 
+        position: {
+            align: 'right',        // Horizontal alignment: 'left', 'center', or 'right'
+            verticalAlign: 'top', // Vertical alignment: 'top', 'middle', or 'bottom'
+            x: -20,                // Horizontal pixel offset
+            y: 15                 // Vertical pixel offset
+            
+        }
+      }
     },
     panning: true,
     panKey: 'shift',
