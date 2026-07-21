@@ -1,12 +1,15 @@
 # PressureSense
 
-PressureSense Pro is the master controller for an irrigation pressure-monitoring and zone-scheduling system. It runs on a Seeed Studio XIAO ESP32-C6, reads a 0-100 PSI analog pressure sensor, schedules and runs sprinkler zones, and commands a pair of remote relay boards ("Yard" and "Field") over LoRa. A web UI served directly from the ESP32's SPIFFS partition provides live charting, schedule/zone configuration, a sprinkler-system map, and SD/SPIFFS file management. An on-board 3.5" SPI TFT mirrors live status, and a dedicated WebSocket feed drives a separate "Indoor unit" display.
+PressureSense_Master is the master controller for an irrigation pressure-monitoring and zone-scheduling system. It runs on a Seeed Studio XIAO ESP32-C6, reads a 0-100 PSI analog pressure sensor, schedules and runs sprinkler zones, and commands a pair of remote relay boards ("Yard" and "Field") over LoRa. A web UI served directly from the ESP32's SPIFFS partition provides live charting, schedule/zone configuration, a sprinkler-system map, and SD/SPIFFS file management. An on-board 3.5" SPI TFT mirrors live status, and a dedicated WebSocket feed drives a separate "Indoor unit" display.
 
 ## System overview
 
-- **PressureSense Pro (this repo)** — the scheduler and LoRa master. Decides which zone should be active from the zone table, current pressure, and time of day; reads the pressure sensor; logs data to SD; serves the web UI; and commands the Yard/Field boards over LoRa.
-- **Yard / Field remotes** (separate firmware) — dumb relay executors. They accept LoRa relay commands, switch outputs, run their own safety timers, and ACK/ERROR/STATUS back to the master.
-- **Indoor unit** (separate client) — connects to the master's `/ws` WebSocket and consumes the same `sensorUpdate`/`configData` JSON the CHART page uses, for a secondary indoor display.
+- **PressureSense_Master (this repo)** — the scheduler and LoRa master. Decides which zone should be active from the zone table, current pressure, and time of day; reads the pressure sensor; logs data to SD; serves the web UI; and commands the Yard/Field boards over LoRa.
+- **Yard / Field remotes** (separate firmware - PressureSense_ValveNode) — dumb relay executors. They accept LoRa relay commands, switch outputs, run their own safety timers, and ACK/ERROR/STATUS back to the master.
+- **Indoor unit** (separate client - PressureSense_Indoor) — connects to the master's `/ws` WebSocket and consumes the same `sensorUpdate`/`configData` JSON the CHART page uses, for a secondary indoor display.
+- **PressureSense_App** — a Cloudflare Worker + Durable Object that relays that same `/ws` feed to the public internet. It never talks to the master directly; the **Indoor unit** acts as the bridge, holding one outbound connection to the master's local `/ws` and one outbound connection to this Worker's `/device` endpoint, forwarding frames in both directions. This repo has no code running on the master or the Indoor unit — it's purely the cloud side.
+
+![Architecture Diagram](images/PressureSenseArch.jpg)
 
 ## Hardware
 

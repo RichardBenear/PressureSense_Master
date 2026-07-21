@@ -24,7 +24,7 @@
 #include "secrets.h"
 #include "SPIFFS.h"
 
-#define SD_CS D4 				//pin 22	
+#define SD_CS D4 				// pin 22	
 #define TFT_CS D9 				// pin 20
 #define TFT_RST D3 				// pin 21
 #define ADC_SAMPLES 10			// number of sensor ADC samples to average
