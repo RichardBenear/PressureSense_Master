@@ -2067,38 +2067,12 @@ String buildOffZoneSnapshot() {
 	return JSON.stringify(off);
 }
 
-String checkActiveZone() {
-	// Extract the date part from currentTimeStamp (assumed format: "HH:MM:SS")
-	// CurrentDayStamp: "YYYY-MM-DD"
-	// Not using Seconds
-	int year = currentDayStamp.substring(0, 4).toInt();
-	int month = currentDayStamp.substring(5, 7).toInt();
-	int day = currentDayStamp.substring(8, 10).toInt();
-	int currentHourInt = currentTimeStamp.substring(0, 2).toInt();
-	int currentMinuteInt = currentTimeStamp.substring(3, 5).toInt();
-
-	// Calculate the day of the week based on the date (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-	int currentDay = calculateDayOfWeek(year, month, day);
-
-	// Load the schedule from the file system
-	JSONVar controllers = JSON.parse(loadControllers());
-	if (JSON.typeof(controllers) != "array" || controllers.length() == 0) {
-		logMsg("No controllers available");
-		return buildOffZoneSnapshot();
-	}
-
-	if (!schedulesEnabled) {
-		// Scheduled irrigation is suspended; report idle exactly as the
-		// "nothing currently active" fallback below does. Manual zone/program
-		// runs are a separate code path entirely and are unaffected.
-		return buildOffZoneSnapshot();
-	}
-
-	int currentMinutes = currentHourInt * 60 + currentMinuteInt;
-
-	// Reconstruct the active zone from each program's schedule every sample.
-	// This survives rebooting mid-chain since the cursor is recomputed from
-	// program.start each time rather than persisted.
+// Matches `controllers` against a single (dayOfWeek, effectiveMinutes) pair
+// and returns the active zone snapshot JSON, or "" if nothing matches.
+// Factored out of checkActiveZone() so it can be run once for "today" and
+// once for "yesterday, still running past midnight" (see below) -- the body
+// is otherwise unchanged from the original single-pass version.
+String findActiveZoneForDayAndMinutes(JSONVar &controllers, int dayOfWeek, int effectiveMinutes) {
 	for (int c = 0; c < controllers.length(); c++) {
 		JSONVar controller = controllers[c];
 		String controllerId = String((const char *)controller["id"]);
@@ -2107,7 +2081,7 @@ String checkActiveZone() {
 		for (int p = 0; p < programs.length(); p++) {
 			JSONVar program = programs[p];
 
-			if (!isDayMatching(program["days"], currentDay)) continue;
+			if (!isDayMatching(program["days"], dayOfWeek)) continue;
 
 			String programId = String((const char *)program["id"]);
 
@@ -2142,7 +2116,7 @@ String checkActiveZone() {
 				// zone's own actual on-time; it does NOT shift this nominal
 				// schedule cursor (see serviceRemoteZoneControl below and the
 				// implementation plan's decision #1).
-				if (currentMinutes >= cursorMinutes && currentMinutes < cursorMinutes + runMinutes) {
+				if (effectiveMinutes >= cursorMinutes && effectiveMinutes < cursorMinutes + runMinutes) {
 					JSONVar activeZone;
 					activeZone["znumber"] = String(zoneNumber);
 					activeZone["zname"] = String((const char *)zone["zname"]);
@@ -2156,10 +2130,58 @@ String checkActiveZone() {
 				}
 
 				cursorMinutes += runMinutes;
-				if (currentMinutes < cursorMinutes) break;
+				if (effectiveMinutes < cursorMinutes) break;
 			}
 		}
 	}
+
+	return "";
+}
+
+String checkActiveZone() {
+	// Extract the date part from currentTimeStamp (assumed format: "HH:MM:SS")
+	// CurrentDayStamp: "YYYY-MM-DD"
+	// Not using Seconds
+	int year = currentDayStamp.substring(0, 4).toInt();
+	int month = currentDayStamp.substring(5, 7).toInt();
+	int day = currentDayStamp.substring(8, 10).toInt();
+	int currentHourInt = currentTimeStamp.substring(0, 2).toInt();
+	int currentMinuteInt = currentTimeStamp.substring(3, 5).toInt();
+
+	// Calculate the day of the week based on the date (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+	int currentDay = calculateDayOfWeek(year, month, day);
+
+	// Load the schedule from the file system
+	JSONVar controllers = JSON.parse(loadControllers());
+	if (JSON.typeof(controllers) != "array" || controllers.length() == 0) {
+		logMsg("No controllers available");
+		return buildOffZoneSnapshot();
+	}
+
+	if (!schedulesEnabled) {
+		// Scheduled irrigation is suspended; report idle exactly as the
+		// "nothing currently active" fallback below does. Manual zone/program
+		// runs are a separate code path entirely and are unaffected.
+		return buildOffZoneSnapshot();
+	}
+
+	int currentMinutes = currentHourInt * 60 + currentMinuteInt;
+
+	// A zone chain's cursor accumulates unbounded past 1440 for any program
+	// that runs past midnight (formatScheduleMinutes() above already assumes
+	// this, wrapping it back to HH:MM for display) -- but the wall clock
+	// resets to 0 at midnight, so a chain still running from before midnight
+	// needs to be matched against yesterday's day-of-week using an effective
+	// clock of currentMinutes+1440 (i.e. "yesterday's timeline, continued"),
+	// or it would incorrectly read as finished/off for the rest of the night.
+	// Checked first since an already-in-progress overnight zone takes
+	// priority over any same-moment match from today's own schedule.
+	int yesterdayDay = (currentDay + 6) % 7;
+	String yesterdayMatch = findActiveZoneForDayAndMinutes(controllers, yesterdayDay, currentMinutes + 24 * 60);
+	if (yesterdayMatch.length() > 0) return yesterdayMatch;
+
+	String todayMatch = findActiveZoneForDayAndMinutes(controllers, currentDay, currentMinutes);
+	if (todayMatch.length() > 0) return todayMatch;
 
 	return buildOffZoneSnapshot();
 }
@@ -2507,7 +2529,10 @@ String getZoneRemainingMinutes(String start, String run) {
 	int nowMin = parseTimeMinutes(currentTimeStamp);
 	if (startMin < 0 || nowMin < 0 || runMin <= 0) return "";
 
-	int remaining = startMin + runMin - nowMin;
+	// Modulo-1440 elapsed time so a zone whose window crosses midnight (nowMin
+	// having wrapped back below startMin) doesn't read as ~24h "remaining".
+	int elapsed = ((nowMin - startMin) % 1440 + 1440) % 1440;
+	int remaining = runMin - elapsed;
 	if (remaining < 0) remaining = 0;
 	return String(remaining) + "m";
 }

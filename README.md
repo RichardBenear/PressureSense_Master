@@ -5,8 +5,8 @@ PressureSense_Master is the master controller for an irrigation pressure-monitor
 ## System overview
 
 - **PressureSense_Master (this repo)** — the scheduler and LoRa master. Decides which zone should be active from the zone table, current pressure, and time of day; reads the pressure sensor; logs data to SD; serves the web UI; and commands the Yard/Field boards over LoRa.
-- **Yard / Field remotes** (separate firmware - PressureSense_ValveNode) — dumb relay executors. They accept LoRa relay commands, switch outputs, run their own safety timers, and ACK/ERROR/STATUS back to the master.
-- **Indoor unit** (separate client - PressureSense_Indoor) — connects to the master's `/ws` WebSocket and consumes the same `sensorUpdate`/`configData` JSON the CHART page uses, for a secondary indoor display.
+- **Yard / Field remotes** (separate firmware - PressureSense_ValveNode) — dumb relay executors. They accept LoRa relay commands, switch outputs, run their own safety timers, and ACK/ERROR/STATUS back to the master (see [LoRa protocol](#lora-protocol) below).
+- **Indoor unit** (separate client - PressureSense_Indoor) — connects to the master's `/ws` WebSocket and consumes the same `sensorUpdate`/`configData` JSON the CHART page uses, for a secondary indoor display (see [WebSocket protocol](#websocket-protocol) below).
 - **PressureSense_App** — a Cloudflare Worker + Durable Object that relays that same `/ws` feed to the public internet. It never talks to the master directly; the **Indoor unit** acts as the bridge, holding one outbound connection to the master's local `/ws` and one outbound connection to this Worker's `/device` endpoint, forwarding frames in both directions. This repo has no code running on the master or the Indoor unit — it's purely the cloud side.
 
 ![Architecture Diagram](images/PressureSenseArch.jpg)
@@ -100,6 +100,167 @@ CHART and MAP get live updates over Server-Sent Events at `/events`; the Indoor 
 - `seasonal_adjust_pct` and `zone_delay_sec` live on the program, not per zone.
 - The CONFIG page's "Load External"/"Save As" mechanism supports named schedule presets (e.g. `controllers_spring.json`, `controllers_summer.json`) alongside the live `controllers.json` — "Set as Active Schedule" promotes whichever preset is currently loaded/edited to be the live schedule.
 
+## LoRa protocol
+
+The master and the Yard/Field ValveNode remotes are separate firmware projects (this repo and `PressureSense_ValveNode`) that speak a shared wire protocol over LoRa. This section documents that protocol from the master's side (`initLoRa()`, `sendLoraPacket()`/`sendLoraRelayOn()`, `handleLoraReceiveLine()` in `src/main.cpp`); see `PressureSense_ValveNode/README.md` for the relay-side implementation (RadioLib/SX1262 radio driver, packet CRC verification, per-zone run timers, master-silence watchdog). This repo is the source of truth for the wire format; that repo is the source of truth for how the relay board executes it.
+
+### Radio link
+
+The master uses a **RYLR998** module (AT-command firmware over `HardwareSerial1`, TX/RX on `D5`/`D1`), configured at boot in `initLoRa()`. The ValveNode remotes use a different chip (SX1262 via RadioLib), but both sides are set to the same over-the-air parameters so they can talk to each other:
+
+| Parameter | Value |
+| --- | --- |
+| Frequency | 915 MHz |
+| Spreading factor | 8 |
+| Bandwidth | 125 kHz |
+| Coding rate | 4/5 |
+| Preamble | 8 symbols |
+| TX power | 14 dBm |
+| Network ID | 18 |
+
+| Node | LoRa address |
+| --- | --- |
+| Master (this repo) | 10 |
+| Yard | 1 |
+| Field | 2 |
+
+Outbound packets are sent via the RYLR998's `AT+SEND=<address>,<length>,<hex-payload>` command; inbound packets arrive as `+RCV=<address>,<length>,<hex-payload>,<rssi>,<snr>` lines that `handleLoraReceiveLine()` parses.
+
+### Packet structure
+
+```
+[Command/Status] [Relay#/Status] [Flags] [Payload...] [CRC-H] [CRC-L]
+      1 byte           1 byte      1 byte    N bytes    1 byte  1 byte
+```
+
+The first 3 bytes are a fixed header; everything after is variable-length payload, followed by a 2-byte application-level CRC-16/CCITT (polynomial `0x1021`, initial value `0xFFFF`, computed over every preceding byte) — separate from the LoRa radio's own over-the-air frame integrity check, which the RYLR998/RadioLib handle transparently underneath this.
+
+**Commands (Master → ValveNode)**, sent by `sendLoraPacket()` / `sendLoraRelayOn()`:
+
+| Code | Name | Payload | Relay byte |
+| --- | --- | --- | --- |
+| 0x01 | RELAY_ON | `minutes` (0-255, 0 = no timer) + `len` + zone name (ASCII, up to 20 chars) | Relay number (1-16) |
+| 0x02 | RELAY_OFF | none | Relay number |
+| 0x04 | ALL_OFF | none | 0 |
+| 0x05 | STATUS_REQUEST | none | 0 |
+| 0x06 | RESET | none | 0 |
+
+`ALL_OFF` is sent to both Yard and Field before every scheduled zone transition and when stopping all zones (`sendLoraAllOffToRemotes()`); `RELAY_ON` carries the run-time timer and zone name directly (older 0x03/0x08 follow-up commands are retired).
+
+**Responses (ValveNode → Master)**, handled by `handleLoraReceiveLine()`:
+
+| Code | Name | Payload |
+| --- | --- | --- |
+| 0x80 | ACK | none |
+| 0x81 | ERROR | error code byte |
+| 0x82 | STATUS | 2 bytes: relay state bitmask |
+
+The master verifies each response's CRC and logs ACK/ERROR/STATUS to serial for diagnostics — it does not currently retry on a missing ACK or track sequence numbers, so a dropped response is only visible in the serial log, not surfaced to the schedule logic.
+
+**Flags byte:**
+
+| Bit | Name | Meaning |
+| --- | --- | --- |
+| 0 | `LORA_FLAG_CRC` | Packet includes the trailing CRC-16 (always set) |
+| 1 | `LORA_FLAG_RESPONSE_REQUIRED` | Sender expects an ACK/ERROR response (always set) |
+| 2 | `LORA_FLAG_TARGET_FIELD` | Yard and Field share one LoRa channel — 0 targets Yard, 1 targets Field. Set automatically from the destination address by `loraFlagsForAddress()`. |
+| 3-7 | Reserved | |
+
+### Protocol example
+
+Master turns on relay 3 for 5 minutes, named "Front Lawn", targeting Yard:
+
+```
+0x01 0x03 0x03 0x05 0x0A "Front Lawn" 0xXX 0xXX
+ cmd  rly flg  min  len     name       CRC-H/L
+```
+
+(`flags = 0x03` = `LORA_FLAG_CRC | LORA_FLAG_RESPONSE_REQUIRED`, targeting Yard since bit 2 is 0), sent as `AT+SEND=1,<len>,<hex>`.
+
+ValveNode responds:
+
+```
+0x80 0x00 0x03 0xXX 0xXX   // ACK, status 0, relay 3
+```
+
+## WebSocket protocol
+
+The master serves one WebSocket endpoint, `/ws`, consumed by two sibling repos: **PressureSense_Indoor** (a touchscreen client with a direct LAN connection) and, through that same Indoor unit acting as a bridge, **PressureSense_App** (a Cloudflare Worker that fans the feed out to remote browsers and relays a narrow set of commands back in — the Worker has no path to the master except through that bridge). This section documents the wire format from the master's side (`buildSensorUpdateJson()`, `buildConfigDataJson()`, `buildManualZoneRunsJson()`, `onWsEvent()` in `src/main.cpp`); see those repos' own READMEs for how each client consumes it and where they deliberately depart from the master's own behavior.
+
+### Server → client messages
+
+Sent via `ws.textAll()` (broadcast to every connected client) or `client->text()` (just the requester), depending on the row below:
+
+| `type` | When sent | Notes |
+| --- | --- | --- |
+| `sensorUpdate` | Broadcast every sample cycle (`sensorRateSec`); also sent to a client alone right after `WS_EVT_CONNECT` if a reading already exists | Live PSI + active-zone/schedule snapshot — see field reference below |
+| `manualZoneStatus` | Broadcast after any `manualZone`/`manualProgram` command changes a run, and every sample cycle | Current manual/program runs — see field reference below. Deliberately kept out of `sensorUpdate` |
+| `configData` | To the requester, reply to `getConfig` | `location`, `sampleRateSec`, `calibOffset`, `zones` (the same combined site+controllers document the CONFIG page loads over HTTP — see [Zone schedule format](#zone-schedule-format)) |
+| `fileList` | To the requester, reply to `getFiles` | `sdFiles` / `spiffsFiles` arrays |
+| `schedule` | To the requester, reply to `getSchedule` | `controllers` — `controllers.json` contents only, never `site.json`/`psi_offset` |
+| `schedulesEnabled` | To the requester, reply to `getSchedulesEnabled`; also broadcast to every client after `setSchedulesEnabled` | `enabled` bool |
+| `ack` | To the requester, reply to `saveZones`, `deleteFile`, `reset`, `saveSchedule`, `setSchedulesEnabled`, `manualZone`, `manualProgram` | `{cmd, success, message}` (`sendWsAck()`) — `cmd` echoes back which command it's acknowledging |
+
+### Client → server commands
+
+Sent as `{"cmd": "...", ...}`; dispatched in `onWsEvent()`'s `WS_EVT_DATA` case:
+
+| `cmd` | Fields | Effect |
+| --- | --- | --- |
+| `getConfig` | — | Replies with `configData` |
+| `getFiles` | — | Replies with `fileList` |
+| `getSchedule` | — | Replies with `schedule` |
+| `saveSchedule` | `controllers` | Overwrites `controllers.json` only; acked |
+| `getSchedulesEnabled` | — | Replies with `schedulesEnabled` |
+| `setSchedulesEnabled` | `enabled` | Pause/resume automatic scheduling; acked to the requester, then `schedulesEnabled` broadcast to all clients |
+| `manualZone` | `action` (`start`/`stop`/`stopall`), `controller`, `znumber`, `run` | Start/stop a manual zone run; acked, then `manualZoneStatus` broadcast to all clients |
+| `manualProgram` | `action` (`start`/`stop`/`next`), `controller`, `program` | Start/stop/advance a manual lettered-program run; acked, then `manualZoneStatus` broadcast to all clients |
+| `saveZones` | `zones: {site, weather, controllers}` | Legacy combined site+controllers save in one command; acked. Not used by the current web UI (which saves over HTTP via `/submit-site-form`/`/submit-zone-form` instead) — kept for any future WS-only client |
+| `deleteFile` | `source` (`spiffs`/`sd`), `filename` | Deletes a file; acked |
+| `reset` | — | Acks, then reboots the ESP32 |
+
+Only `getSchedule`, `saveSchedule`, `getSchedulesEnabled`, `setSchedulesEnabled`, `manualZone`, and `manualProgram` are ever relayed from a remote browser through PressureSense_App and the Indoor unit back to the master — `getConfig`/`getFiles`/`saveZones`/`deleteFile`/`reset` are only reachable from a client with a direct LAN connection to `/ws`.
+
+### `sensorUpdate` field reference
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `psi` | float | Calibrated live pressure (1 decimal) |
+| `rawPsi` | float | Pressure before the calibration offset |
+| `sampleRateSec` | int | Current sample interval, seconds |
+| `adcVoltage` | float | Raw ADC voltage behind the reading (3 decimals) |
+| `zoneNumber` | string | Active zone ID; `"0"` means all zones off |
+| `zoneName` | string | Active zone's human-readable name |
+| `zoneAvgPsi` | float | Active zone's target PSI |
+| `status` | string | `OK` / `WARN` / `HIGH` / `LOW`, from `buildPressureStatus()` (mirrors `updateStatStatus()` in `data/index.js`) |
+| `controller` | string | `Yard` \| `Field` \| `OFF` |
+| `days` | string | Active-days abbreviation, e.g. `"Mo We Fr"`, or `"NONE"` when idle (`formatDaysForDisplay()`) |
+| `start` | string | Scheduled start `"HH:MM"`; `"00:00"` means no fixed start |
+| `run` | string | Runtime in minutes |
+| `remaining` | string | Minutes left in the active run, e.g. `"12m"` (`getZoneRemainingMinutes()`); `""` when not computable |
+| `mapKey` | string | `lower(controller):zoneNumber`, e.g. `"yard:3"` (`buildMapKey()`) — matches the MAP page's zone-coverage keys |
+| `allOff` | bool | `true` when `currentPressure >= ZONES_ALL_OFF_PSI` (59 PSI) |
+| `simMode` | bool | `true` while simulation mode is injecting a synthetic PSI reading |
+| `time` / `date` | string | Wall clock at the master |
+| `location` | string | Site label from `site.json` |
+
+**Don't key idle/active-zone logic off `allOff`.** It's only the informational pressure-recovery heuristic described in [Key features](#key-features) above — on this system's pressure-tank setup a refill snaps to ~62 PSI and takes hours to decay back down, so `allOff` reads "not idle" for most of a normal idle cycle. Every downstream client (Indoor, PressureSense_App) keys idle/active-zone state off `zoneNumber`/`controller` (or an empty `manualZoneStatus` runs list) instead — both had this exact bug at one point, found and fixed by auditing every repo for the same `allOff` dependency. Only the master's own PSI gauge color threshold still legitimately uses it.
+
+### `manualZoneStatus` field reference
+
+Sent as `{"type":"manualZoneStatus","runs":[...]}` (`buildManualZoneRunsJson()`); each entry in `runs`:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `controller` | string | `Yard` / `Field` |
+| `relay` | int | Relay/zone number |
+| `remainingSec` | int | Seconds left in the current zone's run |
+| `totalRunMinutes` | int | That zone's configured run length |
+| `program` | bool | `true` if this run is part of a lettered program rather than a single manual zone |
+| `programLetter` | string | Program letter (A-D) when `program` is true, else empty |
+
+A run is left out of `runs` while it's paused between zones during a zone-to-zone delay (`delayPending`), not just once it ends.
+
 ## Data log format
 
 One row per sample, appended to a daily CSV on the SD card (filename from `generateDailyFilename()`):
@@ -134,7 +295,7 @@ All routes are registered in `setup()` in `src/main.cpp`. Static assets (the `da
 | `/ping` | GET | Lightweight health check: uptime, heap stats, WS client count |
 | `/reset` | GET | Reboot the ESP32 |
 | `/events` | SSE | Live `new-readings` push for CHART/MAP |
-| `/ws` | WebSocket | `sensorUpdate` / `configData` JSON for the Indoor unit |
+| `/ws` | WebSocket | `sensorUpdate` / `configData` / `manualZoneStatus` JSON feed + command interface for the Indoor unit and (via its relay bridge) PressureSense_App — see [WebSocket protocol](#websocket-protocol) below |
 
 ## Getting started
 

@@ -61,7 +61,7 @@ static LGFX tft;
 //  #0d6efd   →   1  27  31  → 0x0B7F   accent blue
 //  #c7c419   →  24  48   3  → 0xC603   section headings (yellow-green)
 //  #f59e0b   →  30  39   1  → 0xF4E1   amber / warning
-//  #0d5829   →   2  22   5  → 0x12c5   green / OK
+//  #10ce42   →   2  22   5  → 0x1668   green / OK
 //  #ef4444   →  29  17   8  → 0xEA28   red / error
 //  #1a1200   →   3   9   0  → 0x1900   amber pill background   (NEW)
 //  #0a2a1a   →   1  10   3  → 0x0943   status OK pill bg       (NEW)
@@ -81,7 +81,7 @@ static const uint16_t C_HEAD      = 0xC603;
 static const uint16_t C_ACCENT    = 0x0B7F;
 static const uint16_t C_AMBER     = 0xF4E1;
 static const uint16_t C_RED       = 0xEA28;
-static const uint16_t C_GREEN     = 0x12c5;
+static const uint16_t C_GREEN     = 0x1668;
 static const uint16_t C_AMBER_BG  = 0x1900;   // pill bg for amber alerts
 static const uint16_t C_OK_BG     = 0x0943;   // pill bg for OK status
 static const uint16_t C_ERR_BG    = 0x2801;   // pill bg for ERR status
