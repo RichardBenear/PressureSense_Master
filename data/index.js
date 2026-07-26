@@ -371,6 +371,11 @@ const chart = Highcharts.chart('chart-pressure', {
         if (event.resetSelection) {
           event.preventDefault();
           chart.xAxis[0].setExtremes(currentFullRange.min, currentFullRange.max, true, false);
+          // preventDefault() skips Highcharts' own zoom(), which is what
+          // normally destroys the reset-zoom button — so remove it ourselves.
+          if (chart.resetZoomButton) {
+            chart.resetZoomButton = chart.resetZoomButton.destroy();
+          }
           return false;
         }
       }
