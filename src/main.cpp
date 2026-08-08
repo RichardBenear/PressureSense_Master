@@ -283,6 +283,8 @@ String buildCombinedZoneDocJson();
 int applyRunAdjustments(int baseRunMinutes, int seasonalPct, int weatherPct);
 int lookupZoneDelaySeconds(String controller, String program);
 int lookupZoneWeatherAdjustPct(String controller, int zoneNumber);
+bool isWeatherAutoAdjustEnabled();
+double lookupZoneDeficitMm(String controller, int zoneNumber);
 bool consumeSkipNextRun(String controller, String program);
 String loadWeatherState();
 String loadCalibrationData();
@@ -783,7 +785,14 @@ void serviceManualZoneRuns() {
 }
 
 String buildManualZoneRunsJson() {
-	String json = "{\"type\":\"manualZoneStatus\",\"runs\":[";
+	// Runtime panel's "Wx Adj / Deficit" line: only meaningful for manual
+	// PROGRAM runs (manual ZONE runs use exactly the minutes the user picked,
+	// bypassing weather adjustment entirely -- see startManualZoneRun()).
+	// Included on every run regardless of `program`; clients gate display on
+	// `program === true`, same as this top-level flag gates on `true`.
+	bool weatherAutoAdjustEnabled = isWeatherAutoAdjustEnabled();
+	String json = "{\"type\":\"manualZoneStatus\",\"weatherAutoAdjustEnabled\":" +
+	              String(weatherAutoAdjustEnabled ? "true" : "false") + ",\"runs\":[";
 	bool first = true;
 	unsigned long now = millis();
 	for (uint8_t i = 0; i < MAX_MANUAL_ZONE_RUNS; i++) {
@@ -791,12 +800,16 @@ String buildManualZoneRunsJson() {
 		if (!first) json += ",";
 		long remainingMs = (long)(manualZoneRuns[i].endMillis - now);
 		unsigned long remainingSec = remainingMs > 0 ? (unsigned long)remainingMs / 1000UL : 0UL;
+		int weatherAdjustPct = lookupZoneWeatherAdjustPct(manualZoneRuns[i].controller, manualZoneRuns[i].relay);
+		double deficitMm = lookupZoneDeficitMm(manualZoneRuns[i].controller, manualZoneRuns[i].relay);
 		json += "{\"controller\":\"" + manualZoneRuns[i].controller + "\",";
 		json += "\"relay\":" + String(manualZoneRuns[i].relay) + ",";
 		json += "\"remainingSec\":" + String(remainingSec) + ",";
 		json += "\"totalRunMinutes\":" + String(manualZoneRuns[i].totalRunMinutes) + ",";
 		json += "\"program\":" + String(manualZoneRuns[i].isProgram ? "true" : "false") + ",";
-		json += "\"programLetter\":\"" + manualZoneRuns[i].programLetter + "\"}";
+		json += "\"programLetter\":\"" + manualZoneRuns[i].programLetter + "\",";
+		json += "\"weatherAdjustPct\":" + String(weatherAdjustPct) + ",";
+		json += "\"deficitMm\":" + String(deficitMm, 1) + "}";
 		first = false;
 	}
 	json += "]}";
@@ -1853,6 +1866,42 @@ int lookupZoneWeatherAdjustPct(String controller, int zoneNumber) {
 	return 100;
 }
 
+// Just the weather.auto_adjust gate on its own, for callers (the Runtime
+// panel's "Wx Adj / Deficit" line on Master's web+TFT, Indoor, and the App)
+// that need to know whether to show weather info at all, not compute an
+// adjusted value.
+bool isWeatherAutoAdjustEnabled() {
+	JSONVar siteDoc = JSON.parse(loadSite());
+	JSONVar weatherSettings = (JSON.typeof(siteDoc) == "object") ? siteDoc["weather"] : JSONVar();
+	return JSON.typeof(weatherSettings) == "object" && jsonBoolOr(weatherSettings, "auto_adjust", false);
+}
+
+// Mirrors lookupZoneWeatherAdjustPct()'s exact structure/gate -- diagnostic
+// deficit reading for the same Runtime-panel display. Returns 0 if
+// auto_adjust is off, weather_state.json is missing, or this zone has no
+// entry yet (matches lookupZoneWeatherAdjustPct()'s "100 = neutral" default
+// pattern, just for a quantity where 0 is the neutral/no-data value instead).
+double lookupZoneDeficitMm(String controller, int zoneNumber) {
+	controller.trim();
+	controller.toLowerCase();
+
+	if (!isWeatherAutoAdjustEnabled()) return 0;
+
+	JSONVar state = JSON.parse(loadWeatherState());
+	if (JSON.typeof(state) != "object") return 0;
+	JSONVar zones = state["zones"];
+	if (JSON.typeof(zones) != "array") return 0;
+
+	for (int z = 0; z < zones.length(); z++) {
+		String cid = jsonStringOr(zones[z], "controller", "");
+		cid.toLowerCase();
+		if (cid == controller && (int)jsonNumberOr(zones[z], "zone_number", -1) == zoneNumber) {
+			return jsonNumberOr(zones[z], "deficit_mm", 0);
+		}
+	}
+	return 0;
+}
+
 // Reads skip_next_run for (controller,program); if true, clears it (string-
 // concat rebuild of weather_state.json, never a parsed-JSONVar mutation) and
 // returns the pre-clear value. Only ever called from checkActiveZone()'s own
@@ -2082,6 +2131,9 @@ String buildOffZoneSnapshot() {
 	off["run"] = "0";
 	off["start"] = "00:00";
 	off["days"] = "NONE";
+	off["weatherAutoAdjustEnabled"] = String(isWeatherAutoAdjustEnabled() ? "true" : "false");
+	off["weatherAdjustPct"] = "100";
+	off["deficitMm"] = "0";
 	return JSON.stringify(off);
 }
 
@@ -2144,6 +2196,18 @@ String findActiveZoneForDayAndMinutes(JSONVar &controllers, int dayOfWeek, int e
 					activeZone["run"] = String(runMinutes);
 					activeZone["start"] = formatScheduleMinutes(cursorMinutes);
 					activeZone["days"] = daysDisplay;
+					// Runtime panel's "Wx Adj / Deficit" line (Master web+TFT, Indoor,
+					// App) -- weatherPct is already computed above for runMinutes
+					// itself, deficit is a fresh lookup of the same zone. Also
+					// carries weatherAutoAdjustEnabled here (not just as a top-level
+					// sensorUpdate field, see buildSensorUpdateJson()) because
+					// Master's own web page doesn't consume sensorUpdate at all --
+					// it's fed by the separate SSE `/events` stream (getSensorReading()
+					// -> readingsJson["Active Zone"]), which only ever sees this
+					// object, never the WS message's top-level fields.
+					activeZone["weatherAutoAdjustEnabled"] = String(isWeatherAutoAdjustEnabled() ? "true" : "false");
+					activeZone["weatherAdjustPct"] = String(weatherPct);
+					activeZone["deficitMm"] = String(lookupZoneDeficitMm(controllerId, zoneNumber), 1);
 					return JSON.stringify(activeZone);
 				}
 
@@ -2501,6 +2565,12 @@ String buildSensorUpdateJson() {
 	String controller = String((const char *)readingsJson["Active Zone"]["controller"]);
 	String start = String((const char *)readingsJson["Active Zone"]["start"]);
 	String run = String((const char *)readingsJson["Active Zone"]["run"]);
+	// Runtime panel's "Wx Adj / Deficit" line (Master web+TFT, Indoor, App) --
+	// weatherAdjustPct/deficitMm are set alongside "run" itself in
+	// findActiveZoneForDayAndMinutes()/buildOffZoneSnapshot(), so they always
+	// describe the exact same zone/moment "run" does.
+	float weatherAdjustPct = String((const char *)readingsJson["Active Zone"]["weatherAdjustPct"]).toFloat();
+	float deficitMm = String((const char *)readingsJson["Active Zone"]["deficitMm"]).toFloat();
 	String json = "{";
 	json += "\"type\":\"sensorUpdate\",";
 	json += "\"psi\":"         + String(currentPressure, 1) + ",";
@@ -2519,6 +2589,9 @@ String buildSensorUpdateJson() {
 	json += "\"mapKey\":\""     + buildMapKey(controller, zoneNumber) + "\",";
 	json += "\"allOff\":"       + String(currentPressure >= ZONES_ALL_OFF_PSI ? "true" : "false") + ",";
 	json += "\"simMode\":"      + String(simMode ? "true" : "false") + ",";
+	json += "\"weatherAutoAdjustEnabled\":" + String(isWeatherAutoAdjustEnabled() ? "true" : "false") + ",";
+	json += "\"weatherAdjustPct\":" + String(weatherAdjustPct, 0) + ",";
+	json += "\"deficitMm\":"    + String(deficitMm, 1) + ",";
 	json += "\"time\":\""       + currentTimeStamp + "\",";
 	json += "\"date\":\""       + currentDayStamp  + "\",";
 	json += "\"location\":\""   + currentLocation  + "\"";

@@ -33,7 +33,7 @@ Served from SPIFFS at the device's IP, or `http://pressure-sense.local/` via mDN
 
 | Page | Files | Purpose |
 | --- | --- | --- |
-| CHART | `index.html` / `index.js` | Live pressure gauge, OK/WARN/HIGH/LOW status badge, scheduled-zone card, manual zone/program start-stop, Highcharts pressure history (today or any saved day) with an optional ET0/precipitation weather overlay, status bar (location, sample rate, seasonal adjustments, zone delays, calibration offset) |
+| CHART | `index.html` / `index.js` | Live pressure gauge, OK/WARN/HIGH/LOW status badge, scheduled-zone card, manual zone/program start-stop, a Runtime stat that shows "Wx Adj xx% / Deficit xx.x mm" underneath the active zone's minutes whenever weather auto-adjust is on, Highcharts pressure history (today or any saved day) with an optional ET0/precipitation weather overlay, status bar (location, sample rate, seasonal adjustments, zone delays, calibration offset) |
 | CONFIG | `config.html` / `config.js` | Zone schedule editor: per-controller program cards (start time, day pips, duration, end time, overlap warning) with a popover to edit start/days/zone-delay/seasonal-adjustment; zones support drag-to-reorder, inline name/PSI/run editing with live-recalculated start times, add/delete. "Save Zone Config" saves only the schedule (to `controllers.json`, or a named seasonal preset); Location, Sensor Rate, and Weather Auto-Adjust settings each save independently to `site.json`; "Set as Active Schedule" promotes a loaded preset to be the live schedule |
 | CALIB | `calibration.html` / `calibration.js` | Per-zone irrigation flow calibration (head specs + SVG-measured area → `mm_per_min`) with an editable Head Catalog, import from the `zone_calibration.py` script's output, and PSI calibration (moved here from CONFIG) |
 | MAP | `map.html` / `map.js` | Renders the sprinkler layout SVG, highlights whichever zone(s) are currently active, full-yard or zoomed yard-only view with pan/zoom |
@@ -251,6 +251,9 @@ Only `getSchedule`, `saveSchedule`, `getSchedulesEnabled`, `setSchedulesEnabled`
 | `mapKey` | string | `lower(controller):zoneNumber`, e.g. `"yard:3"` (`buildMapKey()`) — matches the MAP page's zone-coverage keys |
 | `allOff` | bool | `true` when `currentPressure >= ZONES_ALL_OFF_PSI` (59 PSI) |
 | `simMode` | bool | `true` while simulation mode is injecting a synthetic PSI reading |
+| `weatherAutoAdjustEnabled` | bool | `site.json`'s `weather.auto_adjust` setting — gates whether `weatherAdjustPct`/`deficitMm` below are meaningful. Also the top-level gate the CHART page's Runtime stat uses to show/hide its "Wx Adj / Deficit" sub-line |
+| `weatherAdjustPct` | int | Active zone's live weather adjustment percentage (100 = neutral) — same value already folded into `run` above, surfaced separately so clients can show it alongside the adjusted minutes |
+| `deficitMm` | float | Active zone's current soil-water deficit (mm), from `weather_state.json` — diagnostic, shown regardless of `weatherAutoAdjustEnabled`'s effect on scheduling, but the UI only displays it when that flag is true |
 | `time` / `date` | string | Wall clock at the master |
 | `location` | string | Site label from `site.json` |
 
@@ -258,7 +261,7 @@ Only `getSchedule`, `saveSchedule`, `getSchedulesEnabled`, `setSchedulesEnabled`
 
 ### `manualZoneStatus` field reference
 
-Sent as `{"type":"manualZoneStatus","runs":[...]}` (`buildManualZoneRunsJson()`); each entry in `runs`:
+Sent as `{"type":"manualZoneStatus","weatherAutoAdjustEnabled":bool,"runs":[...]}` (`buildManualZoneRunsJson()`). `weatherAutoAdjustEnabled` is the same site-wide `weather.auto_adjust` flag `sensorUpdate` carries, included here too since this is a separate message a client could receive first. Each entry in `runs`:
 
 | Field | Type | Notes |
 | --- | --- | --- |
@@ -268,6 +271,8 @@ Sent as `{"type":"manualZoneStatus","runs":[...]}` (`buildManualZoneRunsJson()`)
 | `totalRunMinutes` | int | That zone's configured run length |
 | `program` | bool | `true` if this run is part of a lettered program rather than a single manual zone |
 | `programLetter` | string | Program letter (A-D) when `program` is true, else empty |
+| `weatherAdjustPct` | int | This zone's live weather adjustment percentage — only meaningful when `program` is true. A manual **zone** run uses exactly the minutes the user picked, bypassing weather adjustment entirely (`startManualZoneRun()`), so this is neutral/100 for those; a manual **program** run replays the schedule's own per-zone adjustment (`findNextProgramZone()`), so it's real here |
+| `deficitMm` | float | This zone's current soil-water deficit (mm) — same caveat as `weatherAdjustPct` above |
 
 A run is left out of `runs` while it's paused between zones during a zone-to-zone delay (`delayPending`), not just once it ends.
 

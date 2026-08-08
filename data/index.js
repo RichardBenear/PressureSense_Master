@@ -621,11 +621,23 @@ function findDisplayManualRun() {
   return fallbackRun || null;
 }
 
+// Wx Adj / Deficit sub-line under the Runtime stat. Only shown when
+// auto-adjust is globally on AND this run's minutes were actually derived
+// from it: scheduled zones and manual PROGRAM runs, not manual ZONE runs
+// (which use exactly the minutes picked, bypassing weather adjustment
+// entirely -- see startManualZoneRun()).
+function formatWxAdjText(pct, deficitMm) {
+  return 'Wx Adj ' + Math.round(Number(pct) || 0) + '%\nDeficit ' + (Number(deficitMm) || 0).toFixed(1) + ' mm';
+}
+
 function updateRuntimeStats() {
+  const wxEl = document.getElementById('stat-runtime-wx');
   const run = findDisplayManualRun();
   if (run) {
     document.getElementById('stat-runtime').textContent = Number(run.totalRunMinutes) > 0 ? run.totalRunMinutes + 'm' : '—';
     document.getElementById('stat-zone-remaining').textContent = formatRemaining(Number(run.remainingSec) || 0);
+    if (wxEl) wxEl.textContent = (run.program && latestScheduledZone.weatherAutoAdjustEnabled)
+      ? formatWxAdjText(run.weatherAdjustPct, run.deficitMm) : '';
     return;
   }
 
@@ -633,6 +645,8 @@ function updateRuntimeStats() {
   const scheduledActive = Boolean(z.znumber) && String(z.controller || '').toUpperCase() !== 'OFF';
   document.getElementById('stat-runtime').textContent = scheduledActive && Number(z.run) > 0 ? z.run + 'm' : '—';
   document.getElementById('stat-zone-remaining').textContent = getZoneTimeRemaining(z);
+  if (wxEl) wxEl.textContent = (scheduledActive && z.weatherAutoAdjustEnabled)
+    ? formatWxAdjText(z.weatherAdjustPct, z.deficitMm) : '';
 }
 
 function normalizeZone(zone) {
@@ -653,7 +667,10 @@ function normalizeZone(zone) {
     days: pick(zone.days, ''),
     start: pick(zone.start, ''),
     run: pick(zone.run, ''),
-    avgpsi: pick(zone.avgpsi, pick(zone.zoneAvgPsi, ''))
+    avgpsi: pick(zone.avgpsi, pick(zone.zoneAvgPsi, '')),
+    weatherAutoAdjustEnabled: pick(zone.weatherAutoAdjustEnabled, false),
+    weatherAdjustPct: pick(zone.weatherAdjustPct, 100),
+    deficitMm: pick(zone.deficitMm, 0)
   };
 }
 
