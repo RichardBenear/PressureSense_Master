@@ -707,7 +707,7 @@ async function submitSensorRate() {
   if (ok) showToast('Sensor rate saved.');
 }
 
-// ---------- Weather & Auto-Adjust ----------
+// ---------- Weather Auto-Adjust ----------
 //
 // Editable settings (site.latitude/longitude/timezone/mm_per_min_default,
 // the whole weather.* block) live in zoneDoc and save through the normal

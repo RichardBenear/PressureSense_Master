@@ -286,6 +286,7 @@ int lookupZoneWeatherAdjustPct(String controller, int zoneNumber);
 bool consumeSkipNextRun(String controller, String program);
 String loadWeatherState();
 String loadCalibrationData();
+String appendWsTypeField(String json, const String &extraFields);
 double lookupZoneAreaFt2(String controller, int zoneNumber);
 double lookupZoneMmPerMin(String controller, int zoneNumber);
 double jsonNumberOr(JSONVar parent, const char *key, double fallback);
@@ -1029,6 +1030,23 @@ String loadWeatherState() {
 	String data = loadZoneTable(SPIFFS, "/weather_state.json");
 	if (data.length() <= 2) return "{}";	// missing/empty file -- loadZoneTable's sentinel is "[]"
 	return data;
+}
+
+// Splices one or more extra "key":value fields onto an already-complete JSON
+// object string, e.g. turning `{"a":1}` + `"type":"x"` into
+// `{"a":1,"type":"x"}`. Shared by the getWeather*/getCalibration WS command
+// handlers below (main.cpp:~2729-2790), which all need to tag an on-disk
+// file's raw contents with a "type" key for schedule.js's switch(m.type) --
+// same splice-not-reparse technique as the /weather-state HTTP handler
+// (main.cpp:3444-3459), factored out once it had 4 near-identical call sites.
+// `json` must already be a non-empty JSON object (i.e. end in "}"); callers
+// are responsible for the missing-file "[]" -> "{}" sentinel translation
+// first (loadWeatherState()/loadCalibrationData() already do this
+// internally; getWeatherLog/getWeatherCache do it at the call site).
+String appendWsTypeField(String json, const String &extraFields) {
+	if (json.endsWith("}")) json.remove(json.length() - 1);
+	json += String(json.endsWith("{") ? "" : ",") + extraFields + "}";
+	return json;
 }
 
 // Per-zone irrigation calibration (head specs + SVG-measured area ->
@@ -2213,48 +2231,6 @@ void initWiFi() {
 	}
 }
 
-// ---------------------------------------------------------------------------
-// Weather auto-adjust -- Phase 1 hardware verification spikes.
-//
-// These two debug endpoints exist purely to prove, on real hardware, that
-// (a) this firmware can complete an HTTPS/TLS request at all -- it never has
-// before; NTP is UDP, not TLS -- and (b) weather_state.json survives a write
-// and a reboot. No budget/scheduling logic depends on these yet. Safe to
-// leave in place after verification; they don't conflict with anything
-// added in later phases.
-// ---------------------------------------------------------------------------
-
-void handleDebugWeatherFetch(AsyncWebServerRequest *request) {
-	if (weatherFetchNowRequested) {
-		request->send(409, "application/json",
-			              "{\"ok\":false,\"message\":\"Weather fetch already pending\"}");
-		return;
-	}
-
-	weatherFetchNowRequested = true;
-	request->send(202, "application/json",
-				  "{\"ok\":true,\"message\":\"Weather fetch queued\"}");
-}
-
-void handleDebugWeatherStateRoundTrip(AsyncWebServerRequest *request) {
-	String sample =
-		"{\"last_fetch_utc\":\"2026-06-26T07:05:00Z\",\"last_fetch_status\":\"ok\","
-		"\"last_fetch_date\":\"2026-06-26\","
-		"\"forecast_rain_24h_mm\":0.0,\"forecast_rain_7d_mm\":12.5,"
-		"\"zones\":[{\"controller\":\"yard\",\"zone_number\":1,\"deficit_mm\":4.2,\"weather_adjust_pct\":100},"
-		"{\"controller\":\"field\",\"zone_number\":9,\"deficit_mm\":1.1,\"weather_adjust_pct\":70}],"
-		"\"programs\":[{\"controller\":\"yard\",\"program\":\"A\",\"skip_next_run\":false},"
-		"{\"controller\":\"field\",\"program\":\"B\",\"skip_next_run\":false}]}";
-
-	bool wrote = writeRawJsonFile(sample, "weather_state.json");
-	String readBack = loadWeatherState();
-
-	String result = "{\"wrote\":" + String(wrote ? "true" : "false") +
-	                 ",\"matches\":" + String(readBack == sample ? "true" : "false") +
-	                 ",\"readBack\":" + readBack + "}";
-	request->send(wrote ? 200 : 500, "application/json", result);
-}
-
 // User-triggered "Fetch Now" (Config page) -- queues the same daily
 // sequence serviceWeatherTask() runs automatically at 00:05, bypassing its
 // day-changed gate entirely. Does NOT call fetchAndApplyWeatherUpdate()
@@ -2270,39 +2246,6 @@ void handleWeatherFetchNow(AsyncWebServerRequest *request) {
 	AsyncWebServerResponse *response = request->beginResponse(200, "application/json", "{\"queued\":true}");
 	response->addHeader("Cache-Control", "no-store");
 	request->send(response);
-}
-
-void handleDebugWeatherAccumulators(AsyncWebServerRequest *request) {
-	String json = "[";
-	bool first = true;
-	for (uint8_t i = 0; i < MAX_WEATHER_ZONE_SLOTS; i++) {
-		if (waterAppliedAccumulators[i].controller.length() == 0) continue;
-		if (!first) json += ",";
-		json += "{\"controller\":\"" + waterAppliedAccumulators[i].controller + "\","
-		        "\"zoneNumber\":" + String(waterAppliedAccumulators[i].zoneNumber) + ","
-		        "\"minutesAppliedToday\":" + String(waterAppliedAccumulators[i].minutesAppliedToday, 2) + "}";
-		first = false;
-	}
-	json += "]";
-	request->send(200, "application/json", json);
-}
-
-void handleDebugWeatherSeedAccumulator(AsyncWebServerRequest *request) {
-	if (!request->hasParam("controller") || !request->hasParam("zone") || !request->hasParam("minutes")) {
-		request->send(400, "text/plain", "Missing ?controller=&zone=&minutes=");
-		return;
-	}
-	String controller = request->getParam("controller")->value();
-	int zoneNumber = request->getParam("zone")->value().toInt();
-	float minutes = request->getParam("minutes")->value().toFloat();
-
-	int slot = findOrCreateWaterAccumulatorSlot(controller, zoneNumber);
-	if (slot < 0) {
-		request->send(500, "text/plain", "No free accumulator slot");
-		return;
-	}
-	waterAppliedAccumulators[slot].minutesAppliedToday = minutes;
-	request->send(200, "text/plain", "ok");
 }
 
 // Location/sensor-rate/PSI-offset now live in site.json (read once at boot
@@ -2796,6 +2739,84 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
 				ws.textAll("{\"type\":\"schedulesEnabled\",\"enabled\":" +
 				           String(schedulesEnabled ? "true" : "false") + "}");
 
+			// ---- Weather Auto-Adjust (read-only, remote CONFIG-page mirror) ----
+			// Purpose-built, narrow commands -- same idiom as getSchedule (which
+			// deliberately excludes site.json) rather than reusing getConfig,
+			// which is intentionally kept off the remote relay path (see Indoor's
+			// message_handler.h). Nothing here is writable remotely.
+			} else if (cmdName == "getWeatherState") {
+				// Same splice as the /weather-state HTTP handler (main.cpp:3444-
+				// 3459): loadWeatherState() + live fetch_pending, plus a "type"
+				// key since the raw file has none.
+				char extra[64];
+				snprintf(extra, sizeof(extra), "\"type\":\"weatherState\",\"fetch_pending\":%s",
+				         weatherFetchNowRequested ? "true" : "false");
+				client->text(appendWsTypeField(loadWeatherState(), extra));
+
+			} else if (cmdName == "getWeatherLog") {
+				// weather_log.json is an object ({"log":[...]}); loadZoneTable()'s
+				// missing-file sentinel is the array "[]" (see loadWeatherState()'s
+				// own guard above) -- translate that to an empty object first so
+				// the splice can't produce malformed JSON on a fresh device that
+				// hasn't logged a weather day yet.
+				String logJson = loadZoneTable(SPIFFS, "/weather_log.json");
+				if (logJson.length() <= 2) logJson = "{\"log\":[]}";
+				client->text(appendWsTypeField(logJson, "\"type\":\"weatherLog\""));
+
+			} else if (cmdName == "getWeatherCache") {
+				// Raw Open-Meteo response, written verbatim by
+				// fetchAndApplyWeatherUpdate(); same missing-file guard as above
+				// for a device that hasn't fetched yet.
+				String cacheJson = loadZoneTable(SPIFFS, "/weather_cache.json");
+				if (cacheJson.length() <= 2) cacheJson = "{}";
+				client->text(appendWsTypeField(cacheJson, "\"type\":\"weatherCache\""));
+
+			} else if (cmdName == "getCalibration") {
+				// loadCalibrationData() already guards the "[]" sentinel -> "{}".
+				client->text(appendWsTypeField(loadCalibrationData(), "\"type\":\"calibration\""));
+
+			} else if (cmdName == "getWeatherSettings") {
+				// Narrow, whitelisted subset of site.json's weather block -- NOT
+				// the full getConfig payload. getSchedule deliberately excludes
+				// site.json entirely; this exposes only the specific fields a
+				// remote read-only viewer needs to gate/label WX Run%/Deficit/
+				// chart display correctly (nothing else from site.json, e.g. no
+				// psi_offset/location).
+				//
+				// Extracted into named primitives (bool/double/int), not
+				// assigned JSONVar-to-JSONVar via operator[] -- see
+				// buildSiteVarFromParts()'s comment above on why a fresh
+				// operator[] prvalue as the RHS of another JSONVar's operator[]
+				// assignment can silently vanish in this Arduino_JSON version.
+				// Casting straight to a primitive sidesteps that class of bug
+				// entirely (matches how the rest of this dispatcher already
+				// reads cmd[] fields, e.g. `(bool)cmd["enabled"]` above). Built
+				// with snprintf into a fixed buffer (matches /spiffs-usage's
+				// pattern) rather than chained String concatenation -- smaller
+				// generated code than seven separate String::operator+= calls.
+				JSONVar siteDoc = JSON.parse(loadSite());
+				bool hasSite = (JSON.typeof(siteDoc) == "object");
+				JSONVar weatherDoc = hasSite ? siteDoc["weather"] : JSONVar();
+				bool hasWeather = (JSON.typeof(weatherDoc) == "object");
+
+				bool autoAdjust          = hasWeather ? (bool)weatherDoc["auto_adjust"] : false;
+				double referenceDeficit  = hasWeather ? (double)weatherDoc["reference_deficit_mm"] : 6.0;
+				double maxDeficit        = hasWeather ? (double)weatherDoc["max_deficit_mm"] : 25.0;
+				double rainSkipThreshold = hasWeather ? (double)weatherDoc["rain_skip_threshold_mm"] : 0.0;
+				int minAdjustPct         = hasWeather ? (int)weatherDoc["min_adjust_pct"] : 0;
+				int maxAdjustPct         = hasWeather ? (int)weatherDoc["max_adjust_pct"] : 150;
+				double mmPerMinDefault   = hasSite ? (double)siteDoc["mm_per_min_default"] : 0.25;
+
+				char settingsJson[256];
+				snprintf(settingsJson, sizeof(settingsJson),
+				         "{\"type\":\"weatherSettings\",\"auto_adjust\":%s,"
+				         "\"reference_deficit_mm\":%.2f,\"max_deficit_mm\":%.2f,"
+				         "\"rain_skip_threshold_mm\":%.2f,\"min_adjust_pct\":%d,"
+				         "\"max_adjust_pct\":%d,\"mm_per_min_default\":%.3f}",
+				         autoAdjust ? "true" : "false", referenceDeficit, maxDeficit,
+				         rainSkipThreshold, minAdjustPct, maxAdjustPct, mmPerMinDefault);
+				client->text(settingsJson);
+
 			} else if (cmdName == "manualZone") {
 				String action     = String((const char *)cmd["action"]);
 				String controller = String((const char *)cmd["controller"]);
@@ -3124,6 +3145,30 @@ void setup() {
 		request->send(200, "application/json", json);
 	});
 
+	// SPIFFS has no equivalent of sdCardLock (nothing serializes access to it
+	// the way the SD/SPI bus is guarded), so unlike /sd-usage this reads
+	// usedBytes()/totalBytes() directly on every request instead of caching.
+	// Added to check SPIFFS headroom directly -- static web assets alone
+	// consume the large majority of the partition, and controllers.json/
+	// weather_log.json/calibration.json saves can start failing with
+	// "Failed to write data to file" well before the filesystem is
+	// logically full if usage creeps into the high-80s/90s percent range.
+	server.on("/spiffs-usage", HTTP_GET, [](AsyncWebServerRequest *request) {
+		uint64_t total = SPIFFS.totalBytes();
+		uint64_t used = SPIFFS.usedBytes();
+		uint64_t freeBytes = total > used ? total - used : 0;
+		float percent = total > 0 ? ((float)used / (float)total) * 100.0f : 0.0f;
+
+		char json[128];
+		snprintf(json, sizeof(json),
+		         "{\"total\":%llu,\"used\":%llu,\"free\":%llu,\"percent\":%.1f}",
+		         (unsigned long long)total,
+		         (unsigned long long)used,
+		         (unsigned long long)freeBytes,
+		         percent);
+		request->send(200, "application/json", json);
+	});
+
 	server.on("/get-data-file", HTTP_GET, [](AsyncWebServerRequest *request) {
 		if (request->hasParam("filename")) {
 			String fileName = request->getParam("filename")->value();
@@ -3185,6 +3230,56 @@ void setup() {
 			logMsg("Filename not specified.");
 			request->send(400, "text/plain", "Filename not specified.");
 		}
+	});
+
+	// Background image for style.css's body.ag-page::before layer, used by all
+	// 5 pages. Moved off SPIFFS to SD (see reference/water_waves.jpg) because at
+	// 221KB it was the single largest file in data/ and SPIFFS was down to ~28KB
+	// free, which was failing schedule saves ("Failed to write data to file").
+	// Mirrors /get-data-file's sdCardLock/chunked-read pattern (SD shares the
+	// SPI bus with the TFT and logData() writes) but with a long, cacheable
+	// Cache-Control instead of no-store: this file is static (nothing in the
+	// firmware ever writes it; changing it requires manually re-copying it onto
+	// the SD card), and it's fetched by every page load, so re-streaming 221KB
+	// over the slow, lock-contended SD path on every navigation would be both
+	// slow and would block other SD operations for the whole transfer. 404 (not
+	// 500) if it's missing -- e.g. a fresh SD card not yet provisioned with this
+	// file -- so it fails as a harmless missing background image via the
+	// browser's own CSS fallback, not as a surfaced device error.
+	server.on("/water_waves.jpg", HTTP_GET, [](AsyncWebServerRequest *request) {
+		if (sdCardLock) {
+			request->send(503, "text/plain", "SD card is busy");
+			return;
+		}
+		if (!SD.exists("/water_waves.jpg")) {
+			request->send(404, "text/plain", "File not found");
+			return;
+		}
+
+		sdCardLock = true;
+		File file = SD.open("/water_waves.jpg", FILE_READ);
+		if (!file) {
+			request->send(404, "text/plain", "File not found");
+			sdCardLock = false;
+			return;
+		}
+
+		char buffer[BUFFER_SIZE];
+		AsyncWebServerResponse *response = request->beginChunkedResponse("image/jpeg",
+		    [file, buffer](uint8_t *data, size_t len, size_t index) mutable -> size_t {
+			if (file.available()) {
+				memset(buffer, 0, BUFFER_SIZE);
+				size_t bytesRead = file.readBytes(buffer, BUFFER_SIZE);
+				memcpy(data, buffer, bytesRead);
+				return bytesRead;
+			} else {
+				file.close();
+				sdCardLock = false;
+				return 0;
+			}
+		});
+		response->addHeader("Cache-Control", "max-age=86400, immutable");
+		request->send(response);
 	});
 
 	server.on("/list-sd-card-files", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -3463,7 +3558,7 @@ void setup() {
 		}
 	});
 
-	// Site Identity / Sensor Rate / Weather & Auto-Adjust (CONFIG page) --
+	// Site Identity / Sensor Rate / Weather Auto-Adjust (CONFIG page) --
 	// saves only site.json, independent of /submit-zone-form's schedule
 	// save. Replaces the old shared-sentinel mechanism where these three
 	// forms funneled through the same endpoint as the schedule save; that
@@ -3586,13 +3681,6 @@ void setup() {
 
 	// Config page "Fetch Now" button.
 	server.on("/weather-fetch-now", HTTP_GET, handleWeatherFetchNow);
-
-	// Weather auto-adjust Phase 1 hardware-verification spikes (see comment
-	// above handleDebugWeatherFetch). Optional ?lat=&lon= query params.
-	//server.on("/debug-weather-fetch", HTTP_GET, handleDebugWeatherFetch);
-	//server.on("/debug-weather-state-roundtrip", HTTP_GET, handleDebugWeatherStateRoundTrip);
-	//server.on("/debug-weather-accumulators", HTTP_GET, handleDebugWeatherAccumulators);
-	//server.on("/debug-weather-seed-accumulator", HTTP_GET, handleDebugWeatherSeedAccumulator);
 
 	server.on("/manual-zones", HTTP_GET, [](AsyncWebServerRequest *request) {
 		AsyncWebServerResponse *response = request->beginResponse(200, "application/json", buildManualZoneRunsJson());

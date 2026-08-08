@@ -22,7 +22,7 @@ PressureSense_Master is the master controller for an irrigation pressure-monitor
 | Pressure sensor | Analog, two-point calibrated (30 PSI @ 1.5V, 60 PSI @ 2.9V), sampled via `analogReadMilliVolts()` |
 | Display | 3.5" SPI TFT, ILI9488 driver via LovyanGFX (`src/Display.h`/`.cpp`) |
 | LoRa | RYLR998 module on `HardwareSerial1`, AT-command configured at boot |
-| Storage | SD card (daily CSV data logs, plus original copies of calibration/weather files kept as a rollback) + SPIFFS (web UI, `site.json`/`controllers.json`, per-zone flow `calibration.json`, `weather_state.json`/`weather_cache.json`/`weather_log.json`, OTA partitions) |
+| Storage | SD card (daily CSV data logs, plus original copies of calibration/weather files kept as a rollback, plus `water_waves.jpg` (background image, manually provisioned)) + SPIFFS (web UI, `site.json`/`controllers.json`, per-zone flow `calibration.json`, `weather_state.json`/`weather_cache.json`/`weather_log.json`, OTA partitions) |
 | Enclosure | 3D-printable design in `FreeCAD/` (native `.FCStd` source) |
 
 Pin assignments, sensor calibration constants, and LoRa radio parameters are all `#define`d near the top of [src/main.cpp](src/main.cpp).
@@ -34,7 +34,7 @@ Served from SPIFFS at the device's IP, or `http://pressure-sense.local/` via mDN
 | Page | Files | Purpose |
 | --- | --- | --- |
 | CHART | `index.html` / `index.js` | Live pressure gauge, OK/WARN/HIGH/LOW status badge, scheduled-zone card, manual zone/program start-stop, Highcharts pressure history (today or any saved day) with an optional ET0/precipitation weather overlay, status bar (location, sample rate, seasonal adjustments, zone delays, calibration offset) |
-| CONFIG | `config.html` / `config.js` | Zone schedule editor: per-controller program cards (start time, day pips, duration, end time, overlap warning) with a popover to edit start/days/zone-delay/seasonal-adjustment; zones support drag-to-reorder, inline name/PSI/run editing with live-recalculated start times, add/delete. "Save Zone Config" saves only the schedule (to `controllers.json`, or a named seasonal preset); Location, Sensor Rate, and Weather & Auto-Adjust settings each save independently to `site.json`; "Set as Active Schedule" promotes a loaded preset to be the live schedule |
+| CONFIG | `config.html` / `config.js` | Zone schedule editor: per-controller program cards (start time, day pips, duration, end time, overlap warning) with a popover to edit start/days/zone-delay/seasonal-adjustment; zones support drag-to-reorder, inline name/PSI/run editing with live-recalculated start times, add/delete. "Save Zone Config" saves only the schedule (to `controllers.json`, or a named seasonal preset); Location, Sensor Rate, and Weather Auto-Adjust settings each save independently to `site.json`; "Set as Active Schedule" promotes a loaded preset to be the live schedule |
 | CALIB | `calibration.html` / `calibration.js` | Per-zone irrigation flow calibration (head specs + SVG-measured area → `mm_per_min`) with an editable Head Catalog, import from the `zone_calibration.py` script's output, and PSI calibration (moved here from CONFIG) |
 | MAP | `map.html` / `map.js` | Renders the sprinkler layout SVG, highlights whichever zone(s) are currently active, full-yard or zoomed yard-only view with pan/zoom |
 | FILES | `files.html` / `files.js` | Browse/delete SPIFFS and SD card files, preview JSON/text file contents, reboot the ESP32 |
@@ -199,6 +199,11 @@ Sent via `ws.textAll()` (broadcast to every connected client) or `client->text()
 | `fileList` | To the requester, reply to `getFiles` | `sdFiles` / `spiffsFiles` arrays |
 | `schedule` | To the requester, reply to `getSchedule` | `controllers` — `controllers.json` contents only, never `site.json`/`psi_offset` |
 | `schedulesEnabled` | To the requester, reply to `getSchedulesEnabled`; also broadcast to every client after `setSchedulesEnabled` | `enabled` bool |
+| `weatherState` | To the requester, reply to `getWeatherState` | Same shape as `GET /weather-state` (firmware-owned runtime deficit/adjust-pct/skip state) plus `type` |
+| `weatherLog` | To the requester, reply to `getWeatherLog` | Same shape as `GET /weather_log.json` (`log` array, up to 90 days) plus `type` |
+| `weatherCache` | To the requester, reply to `getWeatherCache` | Same shape as `GET /weather_cache.json` (raw Open-Meteo response) plus `type` |
+| `calibration` | To the requester, reply to `getCalibration` | Same shape as `GET /calibration.json` (`zones` array) plus `type` |
+| `weatherSettings` | To the requester, reply to `getWeatherSettings` | Narrow, read-only subset of `site.json`'s `weather` block (`auto_adjust`, `reference_deficit_mm`, `max_deficit_mm`, `rain_skip_threshold_mm`, `min_adjust_pct`, `max_adjust_pct`, `mm_per_min_default`) — never the full `site.json` |
 | `ack` | To the requester, reply to `saveZones`, `deleteFile`, `reset`, `saveSchedule`, `setSchedulesEnabled`, `manualZone`, `manualProgram` | `{cmd, success, message}` (`sendWsAck()`) — `cmd` echoes back which command it's acknowledging |
 
 ### Client → server commands
@@ -213,13 +218,18 @@ Sent as `{"cmd": "...", ...}`; dispatched in `onWsEvent()`'s `WS_EVT_DATA` case:
 | `saveSchedule` | `controllers` | Overwrites `controllers.json` only; acked |
 | `getSchedulesEnabled` | — | Replies with `schedulesEnabled` |
 | `setSchedulesEnabled` | `enabled` | Pause/resume automatic scheduling; acked to the requester, then `schedulesEnabled` broadcast to all clients |
+| `getWeatherState` | — | Replies with `weatherState` |
+| `getWeatherLog` | — | Replies with `weatherLog` |
+| `getWeatherCache` | — | Replies with `weatherCache` |
+| `getCalibration` | — | Replies with `calibration` |
+| `getWeatherSettings` | — | Replies with `weatherSettings` |
 | `manualZone` | `action` (`start`/`stop`/`stopall`), `controller`, `znumber`, `run` | Start/stop a manual zone run; acked, then `manualZoneStatus` broadcast to all clients |
 | `manualProgram` | `action` (`start`/`stop`/`next`), `controller`, `program` | Start/stop/advance a manual lettered-program run; acked, then `manualZoneStatus` broadcast to all clients |
 | `saveZones` | `zones: {site, weather, controllers}` | Legacy combined site+controllers save in one command; acked. Not used by the current web UI (which saves over HTTP via `/submit-site-form`/`/submit-zone-form` instead) — kept for any future WS-only client |
 | `deleteFile` | `source` (`spiffs`/`sd`), `filename` | Deletes a file; acked |
 | `reset` | — | Acks, then reboots the ESP32 |
 
-Only `getSchedule`, `saveSchedule`, `getSchedulesEnabled`, `setSchedulesEnabled`, `manualZone`, and `manualProgram` are ever relayed from a remote browser through PressureSense_App and the Indoor unit back to the master — `getConfig`/`getFiles`/`saveZones`/`deleteFile`/`reset` are only reachable from a client with a direct LAN connection to `/ws`.
+Only `getSchedule`, `saveSchedule`, `getSchedulesEnabled`, `setSchedulesEnabled`, `manualZone`, `manualProgram`, `getWeatherState`, `getWeatherLog`, `getWeatherCache`, `getCalibration`, and `getWeatherSettings` are ever relayed from a remote browser through PressureSense_App and the Indoor unit back to the master — `getConfig`/`getFiles`/`saveZones`/`deleteFile`/`reset` are only reachable from a client with a direct LAN connection to `/ws`.
 
 ### `sensorUpdate` field reference
 
@@ -271,11 +281,12 @@ readingID,date,time,psi,zoneNumber,zoneAvgPsi
 
 ## HTTP API
 
-All routes are registered in `setup()` in `src/main.cpp`. Static assets (the `data/` folder) are served directly from SPIFFS at `/`.
+All routes are registered in `setup()` in `src/main.cpp`. Static assets (the `data/` folder) are served directly from SPIFFS at `/` — except `/water_waves.jpg`, which is served from the SD card by an explicit route instead (see table below); it was moved out of `data/`/SPIFFS because at 221KB it was consuming a large share of the mostly-full SPIFFS partition.
 
 | Endpoint | Method | Purpose |
 | --- | --- | --- |
 | `/get-data-file` | GET | Fetch a CSV log file by name |
+| `/water_waves.jpg` | GET | Background image for all 5 pages' `body.ag-page::before` CSS layer — served from the SD card (not SPIFFS) via the same locked/chunked pattern as `/get-data-file`; 404s cleanly if the SD card hasn't been provisioned with the file yet |
 | `/get-daily-filename` | GET | Current day's log filename |
 | `/list-sd-card-files`, `/list-spiffs-files`, `/list-json-files` | GET | File listings for the FILES page |
 | `/get-spiffs-json-file` | GET | Read a JSON file from SPIFFS |
@@ -291,7 +302,8 @@ All routes are registered in `setup()` in `src/main.cpp`. Static assets (the `da
 | `/manual-zones` | GET | Current manual zone/program run status |
 | `/manual-zone`, `/manual-program` | POST | Start/stop a manual zone or lettered program; `/manual-program` also takes `action: "next"` to skip a running program straight to its next zone (or stop it, if the current zone is the last one) |
 | `/set-sim-pressure`, `/clear-sim` | GET | Enable / disable simulation mode |
-| `/sd-usage` | GET | SD card usage + WiFi/uptime, for page footers (SD-only despite the name — there's no SPIFFS equivalent) |
+| `/sd-usage` | GET | SD card usage + WiFi/uptime, for page footers |
+| `/spiffs-usage` | GET | SPIFFS usage (total/used/free/percent) — added to diagnose SPIFFS filling up and causing save failures; check this before adding any new file to `data/` |
 | `/ping` | GET | Lightweight health check: uptime, heap stats, WS client count |
 | `/reset` | GET | Reboot the ESP32 |
 | `/events` | SSE | Live `new-readings` push for CHART/MAP |
@@ -348,6 +360,20 @@ data/controllers_summer.json   CONFIG page's Load External/Save As, then "Set as
 data/controllers_fall.json     to make one live
 calib/                  Zone flow calibration tooling: zone_calibration.py's own output
                          (zone_calibration.json/.txt), independent of the device's calibration.json
+reference/               Git-tracked copies of files that actually live on the device's SD card
+                         or SPIFFS in production, kept here as a safety net since there's no
+                         automated way to regenerate/redeploy them (unlike data/ -> SPIFFS via
+                         `pio run --target uploadfs`).
+reference/weather_log.json     Sample of the 90-day weather deficit/adjustment history.
+reference/water_waves.jpg      Background image for style.css's body.ag-page::before layer.
+                         NOT in data/ (SPIFFS) -- served from the SD card instead via the
+                         /water_waves.jpg route (src/main.cpp), because at 221KB it was the
+                         largest single file in data/ and was pushing SPIFFS to ~96% full,
+                         which was failing schedule saves. Must be manually copied to the SD
+                         card's root as water_waves.jpg after any SD card swap/reformat -- there
+                         is no automated deploy path for it. Do not move this file back into
+                         data/ without addressing SPIFFS headroom first -- check current usage
+                         via GET /spiffs-usage.
 scripts/zone_calibration.py     Computes per-zone mm_per_min from head specs + SVG-measured area
 scripts/dxf_to_svg.py           Converts a QCAD/AutoCAD DXF sprinkler drawing to SVG for the MAP page
 scripts/remove_qcad_trial.py    Strips QCAD trial-version watermark artifacts from exported SVGs
