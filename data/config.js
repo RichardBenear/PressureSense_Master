@@ -303,29 +303,38 @@ function renderProgramHeaderRow(controller, program) {
   const skipBadgeHtml = (autoAdjustEnabled && weatherEntry && weatherEntry.skip_next_run)
     ? `<span class="ag-weather-skip-badge">&#9748; RAIN SKIP</span>` : '';
 
+  const seasonalPct = program.seasonal_adjust_pct || 0;
+  const seasonalText = (seasonalPct > 0 ? '+' : '') + seasonalPct + '%';
+
   return `
     <div class="ag-program-header" data-controller="${controller.id}" data-program="${program.id}">
-      <span class="ag-program-badge">Program ${program.id}</span>
-      <span class="ag-program-start">${program.start}</span>
-      <span class="ag-program-days">${dayPipsHtml(program.days)}</span>
-      <span class="ag-program-zonecount">${program.zones.length} zones</span>
-      ${skipBadgeHtml}
-      <span class="ag-program-duration">${interval.totalRun} min total</span>
-      <span class="ag-program-endtime">ends ${endTime}${crossesMidnight ? ' <span class="ag-day-badge">+1</span>' : ''}</span>
-      ${overlapHtml}
-      <button class="ag-btn ag-btn-ghost ag-btn-sm edit-program-btn" data-controller="${controller.id}" data-program="${program.id}">&#9998;</button>
+      <div class="ag-program-header-top">
+        <span class="ag-program-badge">Program ${program.id}</span>
+        <button class="ag-btn ag-btn-ghost ag-btn-sm edit-program-btn" data-controller="${controller.id}" data-program="${program.id}">&#9998;</button>
+      </div>
+      <div class="ag-program-header-schedule">
+        <span class="ag-program-start">Start: ${program.start}</span>
+        <span class="ag-program-days">${dayPipsHtml(program.days)}</span>
+        <span class="ag-program-zonecount">${program.zones.length} zones</span>
+        ${skipBadgeHtml}
+        <span class="ag-program-duration">${interval.totalRun} min total</span>
+        <span class="ag-program-endtime">ends ${endTime}${crossesMidnight ? ' <span class="ag-day-badge">+1</span>' : ''}</span>
+        ${overlapHtml}
+      </div>
+      <div class="ag-program-header-adjustments">
+        <span class="ag-program-seasonal">Seasonal Adj: ${seasonalText}</span>
+        <span class="ag-program-zonedelay">Zone Delay: ${program.zone_delay_sec || 0} sec</span>
+      </div>
     </div>`;
 }
 
-// Colors a WX RUN % to match this codebase's existing red/green convention
-// (psiBarColor, overlap warnings, ctrl badges) -- red below 100 (less
-// water), green above 100 (more water), neutral at exactly 100. Now rendered
-// per zone row (not in the column header) since weather_adjust_pct genuinely
-// varies zone to zone.
-function wxPctHtml(weatherPct) {
-  const pct = Math.round(weatherPct);
-  if (pct < 100) return `<span class="ag-wx-pct-low">${pct}%</span>`;
-  if (pct > 100) return `<span class="ag-wx-pct-high">${pct}%</span>`;
+// Colors an adjustment % to match this codebase's existing red/green
+// convention (psiBarColor, overlap warnings, ctrl badges) -- red below 100
+// (less water), green above 100 (more water), neutral at exactly 100.
+function adjPctHtml(pctIn) {
+  const pct = Math.round(pctIn);
+  if (pct < 100) return `<span class="ag-adj-pct-low">${pct}%</span>`;
+  if (pct > 100) return `<span class="ag-adj-pct-high">${pct}%</span>`;
   return `${pct}%`;
 }
 
@@ -341,11 +350,23 @@ function deficitColorClass(deficitMm, referenceDeficitMm, maxDeficitMm) {
   return 'ag-deficit-high';
 }
 
+// Run Adj gives seasonal_adjust_pct precedence over weather_adjust_pct: when
+// a program has a non-zero seasonal adjustment, that's shown (and weather is
+// ignored for THIS column) regardless of whether weather auto-adjust is on;
+// when seasonal is 0%, the column falls back to showing weather's effect,
+// same as it always did. (Starts at/Deficit elsewhere still factor in
+// weather unconditionally -- those track the real schedule, not this
+// display column.)
+function computeRunAdj(baseRunMinutes, seasonalPct, weatherPct) {
+  if (seasonalPct !== 0) return { minutes: applyRunAdjustments(baseRunMinutes, seasonalPct, 100), pct: 100 + seasonalPct };
+  return { minutes: applyRunAdjustments(baseRunMinutes, 0, weatherPct), pct: weatherPct };
+}
+
 function renderZoneRow(controllerId, program, zone, idx) {
   const autoAdjustEnabled = isWeatherAutoAdjustEnabled();
   const weatherPctFn = (z) => findZoneWeatherAdjustPct(weatherState, controllerId, z.znumber, autoAdjustEnabled);
-  const weatherPct = weatherPctFn(zone);
-  const wxRunMinutes = applyRunAdjustments(zone.run, program.seasonal_adjust_pct || 0, weatherPct);
+  const seasonalPct = program.seasonal_adjust_pct || 0;
+  const runAdj = computeRunAdj(zone.run, seasonalPct, weatherPctFn(zone));
   const derivedStart = getZoneDerivedStart(program, idx, weatherPctFn);
   const startLabel = minsToTime(derivedStart) + (derivedStart >= 1440 ? ' +1' : '');
 
@@ -365,7 +386,7 @@ function renderZoneRow(controllerId, program, zone, idx) {
       <td><input class="ag-inline-input zone-name-input" value="${escapeHtml(zone.zname)}" data-field="zname"></td>
       <td><input class="ag-inline-input zone-psi-input" type="number" value="${zone.avgpsi}" data-field="avgpsi" style="width:50px;"></td>
       <td><input class="ag-inline-input zone-run-input" type="number" value="${zone.run}" data-field="run" style="width:50px;"></td>
-      <td class="ag-zone-wx-run">${wxRunMinutes} ${wxPctHtml(weatherPct)}</td>
+      <td class="ag-zone-adj-run">${runAdj.minutes} ${adjPctHtml(runAdj.pct)}</td>
       <td class="ag-zone-starts-at">${startLabel}</td>
       <td class="ag-zone-deficit">${deficitHtml}</td>
       <td><button class="ag-btn ag-btn-danger ag-btn-sm delete-zone-btn" data-controller="${controllerId}" data-program="${program.id}" data-zone-idx="${idx}">&#10005;</button></td>
@@ -378,7 +399,7 @@ function renderZoneTableForProgram(controllerId, program) {
     <table class="ag-zone-table" data-controller="${controllerId}" data-program="${program.id}">
       <thead>
         <tr>
-          <th></th><th>#</th><th>Name</th><th>Target PSI</th><th>Run (min)</th><th>WX Run</th><th>Starts at</th><th>Deficit</th><th></th>
+          <th></th><th>#</th><th>Name</th><th>Target PSI</th><th>Run (min)</th><th>Run Adj</th><th>Starts at</th><th>Deficit</th><th></th>
         </tr>
       </thead>
       <tbody>
@@ -419,12 +440,12 @@ function recalcStartsAtForProgram(table, program) {
   const controllerId = table.dataset.controller;
   const autoAdjustEnabled = isWeatherAutoAdjustEnabled();
   const weatherPctFn = (z) => findZoneWeatherAdjustPct(weatherState, controllerId, z.znumber, autoAdjustEnabled);
+  const seasonalPct = program.seasonal_adjust_pct || 0;
   table.querySelectorAll('tbody tr[data-zone-idx]').forEach(row => {
     const idx = Number(row.dataset.zoneIdx);
     const zone = program.zones[idx];
-    const weatherPct = weatherPctFn(zone);
-    const wxRunMinutes = applyRunAdjustments(zone.run, program.seasonal_adjust_pct || 0, weatherPct);
-    row.querySelector('.ag-zone-wx-run').innerHTML = `${wxRunMinutes} ${wxPctHtml(weatherPct)}`;
+    const runAdj = computeRunAdj(zone.run, seasonalPct, weatherPctFn(zone));
+    row.querySelector('.ag-zone-adj-run').innerHTML = `${runAdj.minutes} ${adjPctHtml(runAdj.pct)}`;
     const derivedStart = getZoneDerivedStart(program, idx, weatherPctFn);
     const label = minsToTime(derivedStart) + (derivedStart >= 1440 ? ' +1' : '');
     row.querySelector('.ag-zone-starts-at').textContent = label;
@@ -859,7 +880,7 @@ function renderWeatherReadOnlyStatus() {
     activeEl.className = 'ag-manual-state muted';
     activeEl.style.color = '';
   } else {
-    activeEl.textContent = '● ADJUSTMENTS ACTIVE — percentages vary by zone (see WX Run column below)';
+    activeEl.textContent = '● ADJUSTMENTS ACTIVE — percentages vary by zone (see Run Adj column below)';
     activeEl.className = 'ag-manual-state';
     activeEl.style.color = '#60a5fa';
   }
