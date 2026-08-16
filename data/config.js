@@ -24,14 +24,14 @@ function setDirty(val) {
   dirty = val;
   const el = document.getElementById('unsaved-indicator');
   el.textContent = dirty ? 'YES' : 'NONE';
-  el.style.color = dirty ? '#f59e0b' : '#5ba4d9';
+  el.style.color = dirty ? '#fbbf24' : '#5ba4d9';
 }
 
 function showToast(msg, isError = false) {
   const t = document.getElementById('toast');
   document.getElementById('toast-msg').textContent = msg;
-  t.style.borderLeftColor = isError ? '#ef4444' : '#22c55e';
-  t.style.color = isError ? '#ef4444' : '#22c55e';
+  t.style.borderLeftColor = isError ? '#f87171' : '#34d873';
+  t.style.color = isError ? '#f87171' : '#34d873';
   t.classList.remove('hidden');
   setTimeout(() => t.classList.add('hidden'), 3500);
 }
@@ -63,8 +63,8 @@ function escapeHtml(str) {
 function psiBarColor(psi) {
   const v = Number(psi);
   if (v >= 36) return '#0d6efd';
-  if (v >= 25) return '#f59e0b';
-  return '#ef4444';
+  if (v >= 25) return '#fbbf24';
+  return '#f87171';
 }
 
 function ctrlBadgeClass(ctrl) {
@@ -882,7 +882,7 @@ function renderWeatherReadOnlyStatus() {
   } else {
     activeEl.textContent = '● ADJUSTMENTS ACTIVE — percentages vary by zone (see Run Adj column below)';
     activeEl.className = 'ag-manual-state';
-    activeEl.style.color = '#60a5fa';
+    activeEl.style.color = '#7ec1ff';
   }
 }
 
@@ -1209,14 +1209,14 @@ const wxZeroLinePlugin = {
     const { ctx, chartArea, scales: { y } } = chart;
     const yZero = y.getPixelForValue(0);
     ctx.save();
-    ctx.strokeStyle = '#8ab0ca';
+    ctx.strokeStyle = '#d6e6f4';
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.moveTo(chartArea.left, yZero);
     ctx.lineTo(chartArea.right, yZero);
     ctx.stroke();
-    ctx.font = "600 9px 'Share Tech Mono', monospace";
-    ctx.fillStyle = '#8ab0ca';
+    ctx.font = "600 11px 'Share Tech Mono', monospace";
+    ctx.fillStyle = '#d6e6f4';
     ctx.textAlign = 'left';
     ctx.fillText('demand ↑', chartArea.left + 2, yZero - 4);
     ctx.fillText('supply ↓', chartArea.left + 2, yZero + 11);
@@ -1383,14 +1383,14 @@ function renderWeatherDeficitChart(chartData, controllerId) {
       animation: false,
       layout: { padding: { top: 14, bottom: 4 } },
       scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { color: '#8ab0ca', font: { family: "'Share Tech Mono', monospace", size: 10 } } },
+        x: { stacked: true, grid: { display: false }, ticks: { color: '#d6e6f4', font: { family: "'Share Tech Mono', monospace", size: 12 } } },
         y: {
           stacked: true,
           suggestedMin: -maxSupplyMag * 1.15,
           suggestedMax: maxDemand * 1.15,
           grid: { color: (ctx) => ctx.tick.value === 0 ? 'transparent' : 'rgba(42,63,84,0.5)' },
           ticks: {
-            color: '#8ab0ca', font: { family: "'Share Tech Mono', monospace", size: 10 },
+            color: '#d6e6f4', font: { family: "'Share Tech Mono', monospace", size: 12 },
             callback: (val) => val === 0 ? '' : Math.abs(val) + 'mm'
           }
         }
@@ -1403,7 +1403,7 @@ function renderWeatherDeficitChart(chartData, controllerId) {
           display: programLineDatasets.length > 1,
           labels: {
             filter: (item, data) => data.datasets[item.datasetIndex].type === 'line',
-            color: '#8ab0ca', font: { family: "'Share Tech Mono', monospace", size: 10 }, boxWidth: 16
+            color: '#d6e6f4', font: { family: "'Share Tech Mono', monospace", size: 12 }, boxWidth: 16
           }
         },
         tooltip: {
@@ -1451,7 +1451,7 @@ function updateWeatherTiles(chartData, controllerId) {
   if (gaugeFill) {
     const pct = Math.max(0, Math.min(100, (deficit / maxDeficit) * 100));
     gaugeFill.style.width = pct + '%';
-    gaugeFill.style.background = deficit < reference ? '#22c55e' : (deficit < maxDeficit * 0.8 ? '#f59e0b' : '#ef4444');
+    gaugeFill.style.background = deficit < reference ? '#34d873' : (deficit < maxDeficit * 0.8 ? '#fbbf24' : '#f87171');
   }
 
   const adjustOut = document.getElementById('weather-adjust-out-' + controllerId);
@@ -1473,10 +1473,10 @@ function updateWeatherTiles(chartData, controllerId) {
   const criticalIdx = futureLine.findIndex(v => v >= maxDeficit);
   if (criticalIdx === -1) {
     projectedEl.textContent = 'Safe ' + (futureLine.length || 0) + 'd';
-    projectedEl.style.color = '#22c55e';
+    projectedEl.style.color = '#34d873';
   } else {
     projectedEl.textContent = 'Critical in ' + (criticalIdx + 1) + 'd';
-    projectedEl.style.color = '#ef4444';
+    projectedEl.style.color = '#f87171';
   }
 }
 
@@ -1607,19 +1607,19 @@ function updateFooterRemote(usage) {
   const sseSuffix = (usage.sseClients !== undefined) ? (' · ' + usage.sseClients + ' live') : '';
   if (usage.wifi !== 'ONLINE') {
     remote.textContent = 'offline';
-    remote.style.color = '#ef4444';
+    remote.style.color = '#f87171';
   } else if (clients === 0) {
     remote.textContent = '0 units' + sseSuffix;
     remote.style.color = '#94a3b8';
   } else if (agoSec === -1 || agoSec === undefined) {
     remote.textContent = clients + ' unit(s), starting…' + sseSuffix;
-    remote.style.color = '#22c55e';
+    remote.style.color = '#34d873';
   } else if (agoSec > 60) {
     remote.textContent = clients + ' unit(s), ' + agoSec + 's ago' + sseSuffix;
-    remote.style.color = '#ef4444';
+    remote.style.color = '#f87171';
   } else {
     remote.textContent = clients + ' unit(s), ' + agoSec + 's ago' + sseSuffix;
-    remote.style.color = '#22c55e';
+    remote.style.color = '#34d873';
   }
 }
 
@@ -1684,6 +1684,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (e) {
     console.error('config bootstrap:', e);
     const status = document.getElementById('system-status');
-    if (status) { status.textContent = 'DATA ERROR'; status.style.color = '#ef4444'; }
+    if (status) { status.textContent = 'DATA ERROR'; status.style.color = '#f87171'; }
   }
 });

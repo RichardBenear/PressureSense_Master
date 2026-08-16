@@ -46,6 +46,9 @@ public:
 static LGFX tft;
 
 // ── Color palette (RGB565) — mirrors the web UI CSS variables ─────────────────
+// Updated alongside the site-wide contrast & typography pass (brighter
+// secondary text, amber section headings, brighter status colors) so the
+// on-device panel and the web dashboard read as the same product.
 //
 //  Web hex    →  R5  G6  B5  → RGB565
 //  #060a10   →   0   2   2  → 0x0042   body background
@@ -54,15 +57,14 @@ static LGFX tft;
 //  #061420   →   0   5   4  → 0x0124   zone card background    (NEW)
 //  #0d1a2a   →   1   6   5  → 0x08C5   stat card background    (NEW)
 //  #3f658d   →   8  25  17  → 0x4331   borders, grid lines
-//  #546c81   →  10  27  16  → 0x5370   dim labels
-//  #60a5fa   →  12  41  31  → 0x653F   mid values / meta text
-//  #87bef2   →  16  47  30  → 0x85FE   bright blue text
-//  #e8f4fd   →  29  61  31  → 0xEFBF   primary value text
+//  #9eb3c4   →  19  44  24  → 0x9D98   dim labels                   (was #546c81)
+//  #7ec1ff   →  15  48  31  → 0x7E1F   mid values / meta text       (was #60a5fa/#87bef2)
+//  #f2f7fc   →  30  61  31  → 0xF7BF   primary value text           (was #e8f4fd)
 //  #0d6efd   →   1  27  31  → 0x0B7F   accent blue
-//  #c7c419   →  24  48   3  → 0xC603   section headings (yellow-green)
-//  #f59e0b   →  30  39   1  → 0xF4E1   amber / warning
+//  #f4b740   →  30  45   8  → 0xF5A8   section headings (amber)     (was #c7c419 yellow-green)
+//  #fbbf24   →  31  47   4  → 0xFDE4   amber / warning               (was #f59e0b)
 //  #10ce42   →   2  22   5  → 0x1668   green / OK
-//  #ef4444   →  29  17   8  → 0xEA28   red / error
+//  #f87171   →  31  28  14  → 0xFB8E   red / error                   (was #ef4444)
 //  #1a1200   →   3   9   0  → 0x1900   amber pill background   (NEW)
 //  #0a2a1a   →   1  10   3  → 0x0943   status OK pill bg       (NEW)
 //  #2a0a0a   →   5   2   1  → 0x2801   status ERR pill bg      (NEW)
@@ -74,13 +76,13 @@ static const uint16_t C_BG_GAUGE  = 0x0924;   // gauge panel — blue-tinted dar
 static const uint16_t C_BG_ZONE   = 0x0124;   // zone card  — deeper blue-green
 static const uint16_t C_BG_STAT   = 0x08C5;   // mini stat cards
 static const uint16_t C_BORDER    = 0x4331;
-static const uint16_t C_DIM       = 0x5370;
-static const uint16_t C_BLUE_HI   = 0x85FE;
-static const uint16_t C_HI        = 0xEFBF;
-static const uint16_t C_HEAD      = 0xC603;
+static const uint16_t C_DIM       = 0x9D98;
+static const uint16_t C_BLUE_HI   = 0x7E1F;
+static const uint16_t C_HI        = 0xF7BF;
+static const uint16_t C_HEAD      = 0xF5A8;
 static const uint16_t C_ACCENT    = 0x0B7F;
-static const uint16_t C_AMBER     = 0xF4E1;
-static const uint16_t C_RED       = 0xEA28;
+static const uint16_t C_AMBER     = 0xFDE4;
+static const uint16_t C_RED       = 0xFB8E;
 static const uint16_t C_GREEN     = 0x1668;
 static const uint16_t C_AMBER_BG  = 0x1900;   // pill bg for amber alerts
 static const uint16_t C_OK_BG     = 0x0943;   // pill bg for OK status

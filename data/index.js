@@ -1,13 +1,13 @@
 const BASE_URL = '';
 
 const PRESSURE_POINT_COLOR = '#87bef2';
-const PRESSURE_ALERT_COLOR = '#ef4444';
-const PRESSURE_WARN_COLOR = '#f59e0b';
+const PRESSURE_ALERT_COLOR = '#f87171';
+const PRESSURE_WARN_COLOR = '#fbbf24';
 const PRESSURE_GAP_MS = 5 * 60 * 1000;
 const PRESSURE_WARN_DEVIATION = 2.0;
 const PRESSURE_ALERT_DEVIATION = 4.0;
-const ZONE_MARKER_COLOR = 'rgba(96, 165, 250, 0.72)'; // yard, scheduled -- matches .ag-ctrl-yard (#60a5fa) on CONFIG
-const ZONE_MARKER_COLOR_FIELD = 'rgba(34, 197, 94, 0.72)'; // field, scheduled -- matches .ag-ctrl-field (#22c55e) on CONFIG
+const ZONE_MARKER_COLOR = 'rgba(126, 193, 255, 0.72)'; // yard, scheduled -- matches .ag-ctrl-yard (#7ec1ff) on CONFIG
+const ZONE_MARKER_COLOR_FIELD = 'rgba(52, 216, 115, 0.72)'; // field, scheduled -- matches .ag-ctrl-field (#34d873) on CONFIG
 const MANUAL_ZONE_MARKER_COLOR = 'rgba(147, 197, 253, 0.9)'; // yard, manual -- brighter blue (#93c5fd)
 const MANUAL_ZONE_MARKER_COLOR_FIELD = 'rgba(134, 239, 172, 0.9)'; // field, manual -- brighter green (#86efac)
 const DAILY_FILE_POLL_MS = 30 * 1000;
@@ -15,8 +15,8 @@ const DAILY_FILE_POLL_MS = 30 * 1000;
 function showToast(msg, isError = false) {
   const t = document.getElementById('toast');
   document.getElementById('toast-msg').textContent = msg;
-  t.style.borderLeftColor = isError ? '#ef4444' : '#22c55e';
-  t.style.color = isError ? '#ef4444' : '#22c55e';
+  t.style.borderLeftColor = isError ? '#f87171' : '#34d873';
+  t.style.color = isError ? '#f87171' : '#34d873';
   t.classList.remove('hidden');
   setTimeout(() => t.classList.add('hidden'), 3500);
 }
@@ -388,7 +388,7 @@ const chart = Highcharts.chart('chart-pressure', {
     min: chartDayRange.min,
     max: chartDayRange.max,
     tickInterval: 3600 * 1000,
-    labels: { style: { color: '#8ab0ca', fontSize: '10px' } },
+    labels: { style: { color: '#d6e6f4', fontSize: '12px' } },
     lineColor: '#456a84',
     tickColor: '#456a84',
     gridLineColor: '#456a84'
@@ -399,7 +399,7 @@ const chart = Highcharts.chart('chart-pressure', {
     max: 70,
     tickInterval: 10,
     labels: {
-      style: { color: '#8ab0ca', fontSize: '10px' },
+      style: { color: '#d6e6f4', fontSize: '12px' },
       formatter: function () { return this.value + ' psi'; }
     },
     gridLineColor: '#456a84'
@@ -412,7 +412,7 @@ const chart = Highcharts.chart('chart-pressure', {
     min: 0,
     visible: false,
     labels: {
-      style: { color: '#8ab0ca', fontSize: '10px' },
+      style: { color: '#d6e6f4', fontSize: '12px' },
       formatter: function () { return this.value + ' mm'; }
     },
     gridLineWidth: 0
@@ -437,7 +437,7 @@ const chart = Highcharts.chart('chart-pressure', {
     step: 'left',
     yAxis: 1,
     data: [],
-    color: '#60a5fa',
+    color: '#7ec1ff',
     lineWidth: 1.5,
     visible: false,
     showInLegend: false,
@@ -524,9 +524,9 @@ async function toggleWeatherOverlay() {
     chart.yAxis[1].update({
       visible: true,
       plotLines: [{
-        id: 'weather-reference-deficit', value: referenceDeficit, color: '#8ab0ca',
+        id: 'weather-reference-deficit', value: referenceDeficit, color: '#d6e6f4',
         dashStyle: 'Dash', width: 1,
-        label: { text: 'reference deficit', style: { color: '#8ab0ca', fontSize: '9px' } }
+        label: { text: 'reference deficit', style: { color: '#d6e6f4', fontSize: '11px' } }
       }]
     }, false);
 
@@ -745,7 +745,7 @@ function startSSE() {
 
   sseSource.addEventListener('error', () => {
     document.getElementById('system-status').textContent = 'OFFLINE';
-    document.getElementById('system-status').style.color = '#ef4444';
+    document.getElementById('system-status').style.color = '#f87171';
     document.querySelector('.ag-status-dot').classList.add('offline');
   });
 }
@@ -1375,19 +1375,19 @@ function updateFooterRemote(usage) {
   const sseSuffix = (usage.sseClients !== undefined) ? (' · ' + usage.sseClients + ' live') : '';
   if (usage.wifi !== 'ONLINE') {
     remote.textContent = 'offline';
-    remote.style.color = '#ef4444';
+    remote.style.color = '#f87171';
   } else if (clients === 0) {
     remote.textContent = '0 units' + sseSuffix;
     remote.style.color = '#94a3b8';
   } else if (agoSec === -1 || agoSec === undefined) {
     remote.textContent = clients + ' unit(s), starting…' + sseSuffix;
-    remote.style.color = '#22c55e';
+    remote.style.color = '#34d873';
   } else if (agoSec > 60) {
     remote.textContent = clients + ' unit(s), ' + agoSec + 's ago' + sseSuffix;
-    remote.style.color = '#ef4444';
+    remote.style.color = '#f87171';
   } else {
     remote.textContent = clients + ' unit(s), ' + agoSec + 's ago' + sseSuffix;
-    remote.style.color = '#22c55e';
+    remote.style.color = '#34d873';
   }
 }
 
@@ -1494,11 +1494,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadFooterStatus();
     await refreshManualControlState();
     const dataStatus = document.getElementById('footer-data-status');
-    if (dataStatus) { dataStatus.textContent = 'OK'; dataStatus.style.color = '#22c55e'; }
+    if (dataStatus) { dataStatus.textContent = 'OK'; dataStatus.style.color = '#34d873'; }
   } catch (e) {
     console.error('dashboard bootstrap:', e);
     const dataStatus = document.getElementById('footer-data-status');
-    if (dataStatus) { dataStatus.textContent = 'ERROR'; dataStatus.style.color = '#ef4444'; }
+    if (dataStatus) { dataStatus.textContent = 'ERROR'; dataStatus.style.color = '#f87171'; }
   }
   setInterval(loadManualRunsStatus, 5000);
   setInterval(tickRuntimeCountdowns, 1000);

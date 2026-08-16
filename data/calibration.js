@@ -19,14 +19,14 @@ function setDirty(val) {
   dirty = val;
   const el = document.getElementById('unsaved-indicator');
   el.textContent = dirty ? 'YES' : 'NONE';
-  el.style.color = dirty ? '#f59e0b' : '#5ba4d9';
+  el.style.color = dirty ? '#fbbf24' : '#5ba4d9';
 }
 
 function showToast(msg, isError = false) {
   const t = document.getElementById('toast');
   document.getElementById('toast-msg').textContent = msg;
-  t.style.borderLeftColor = isError ? '#ef4444' : '#22c55e';
-  t.style.color = isError ? '#ef4444' : '#22c55e';
+  t.style.borderLeftColor = isError ? '#f87171' : '#34d873';
+  t.style.color = isError ? '#f87171' : '#34d873';
   t.classList.remove('hidden');
   setTimeout(() => t.classList.add('hidden'), 3500);
 }
@@ -549,19 +549,19 @@ function updateFooterRemote(usage) {
   const sseSuffix = (usage.sseClients !== undefined) ? (' · ' + usage.sseClients + ' live') : '';
   if (usage.wifi !== 'ONLINE') {
     remote.textContent = 'offline';
-    remote.style.color = '#ef4444';
+    remote.style.color = '#f87171';
   } else if (clients === 0) {
     remote.textContent = '0 units' + sseSuffix;
     remote.style.color = '#94a3b8';
   } else if (agoSec === -1 || agoSec === undefined) {
     remote.textContent = clients + ' unit(s), starting…' + sseSuffix;
-    remote.style.color = '#22c55e';
+    remote.style.color = '#34d873';
   } else if (agoSec > 60) {
     remote.textContent = clients + ' unit(s), ' + agoSec + 's ago' + sseSuffix;
-    remote.style.color = '#ef4444';
+    remote.style.color = '#f87171';
   } else {
     remote.textContent = clients + ' unit(s), ' + agoSec + 's ago' + sseSuffix;
-    remote.style.color = '#22c55e';
+    remote.style.color = '#34d873';
   }
 }
 
